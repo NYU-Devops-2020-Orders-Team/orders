@@ -4,38 +4,54 @@ Test cases can be run with the following:
   nosetests -v --with-spec --spec-color
   coverage report -m
 """
+from unittest import TestCase
 import os
 import logging
-from unittest import TestCase
-from unittest.mock import MagicMock, patch
 from flask_api import status  # HTTP Status Codes
-from service.service import app
+# from unittest.mock import MagicMock, patch
+from service.models import Order, DataValidationError, db
+from service import app
+from service.service import init_db
+
+logging.disable(logging.CRITICAL)
+
+DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb")
+
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
-class TestOrderServer(TestCase):
+class TestOrderService(TestCase):
     """ REST API Server Tests """
 
     @classmethod
     def setUpClass(cls):
-        """ This runs once before the entire test suite """
-        pass
+        """ Run once before all tests """
+        app.debug = False
+        app.testing = True
+        # Set up the test database
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 
     @classmethod
     def tearDownClass(cls):
-        """ This runs once after the entire test suite """
+        """ Run once after all tests """
         pass
 
     def setUp(self):
-        """ This runs before each test """
+        """ Runs before each test """
+        init_db()
+        db.drop_all()
+        db.create_all()
         self.app = app.test_client()
 
     def tearDown(self):
-        """ This runs after each test """
-        pass
+        db.session.remove()
+        db.drop_all()
 
     def test_index(self):
-        """ Test index call """
+        """ Test the Home Page """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["name"], "Orders REST API Service")
+        self.assertEqual(data["version"], "1.0")

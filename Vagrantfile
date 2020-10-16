@@ -50,7 +50,17 @@ Vagrant.configure(2) do |config|
     if File.exists?(File.expand_path("~/.vimrc"))
       config.vm.provision "file", source: "~/.vimrc", destination: "~/.vimrc"
     end
-  
+
+    ######################################################################
+    # Add PostgreSQL docker container
+    ######################################################################
+    # docker run -d --name postgres -p 5432:5432 -v psql_data:/var/lib/postgresql/data postgres
+    config.vm.provision :docker do |d|
+      d.pull_images "postgres:alpine"
+      d.run "postgres:alpine",
+         args: "-d --name postgres -p 5432:5432 -v psql_data:/var/lib/postgresql/data -e POSTGRES_PASSWORD=postgres"
+    end
+
     ############################################################
     # Create a Python 3 environment for development work
     ############################################################
@@ -63,16 +73,8 @@ Vagrant.configure(2) do |config|
       sudo -H -u vagrant sh -c 'python3 -m venv ~/venv'
       sudo -H -u vagrant sh -c 'echo ". ~/venv/bin/activate" >> ~/.profile'
       sudo -H -u vagrant sh -c '. ~/venv/bin/activate && cd /vagrant && pip install -r requirements.txt'
+      #Add a test DB
+      docker exec postgres psql -c 'create database testdb;' -U postgres
     SHELL
-  
-    ######################################################################
-    # Add PostgreSQL docker container
-    ######################################################################
-    # docker run -d --name postgres -p 5432:5432 -v psql_data:/var/lib/postgresql/data postgres
-    config.vm.provision :docker do |d|
-      d.pull_images "postgres:alpine"
-      d.run "postgres:alpine",
-         args: "-d --name postgres -p 5432:5432 -v psql_data:/var/lib/postgresql/data -e POSTGRES_PASSWORD=postgres"
-    end
-  
+
   end
