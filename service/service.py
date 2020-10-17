@@ -53,5 +53,4 @@ def create_orders():
     order.create()
     app.logger.info('Created Order with id: {}'.format(order.id))
     return make_response(jsonify(order.serialize()),
-                         status.HTTP_201_CREATED,
-                         {'Location': url_for('get_orders', order_id=order.id, _external=True)})
+                         status.HTTP_201_CREATED)
