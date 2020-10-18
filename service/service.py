@@ -50,7 +50,10 @@ def create_orders():
     app.logger.info('Create Order requested')
     order = Order()
     order.deserialize(request.get_json())
+
+    if order.customer_id == "":
+        return make_response(jsonify(order.serialize()),status.HTTP_400_BAD_REQUEST)
+
     order.create()
     app.logger.info('Created Order with id: {}'.format(order.id))
-    return make_response(jsonify(order.serialize()),
-                         status.HTTP_201_CREATED)
+    return make_response(jsonify(order.serialize()),status.HTTP_201_CREATED)
