@@ -53,10 +53,10 @@ class OrderItem(db.Model):
             self.price = data["price"]
             self.status = data["status"]
         except KeyError as error:
-            raise DataValidationError("Invalid pet: missing " + error.args[0])
+            raise DataValidationError("Invalid order: missing " + error.args[0])
         except TypeError as error:
             raise DataValidationError(
-                "Invalid pet: body of request contained bad or no data"
+                "Invalid order: body of request contained bad or no data"
             )
         return self
 
@@ -72,7 +72,7 @@ class Order(db.Model):
     # Order Table Schema
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.String(40), nullable=False)
+    customer_id = db.Column(db.Integer, nullable=False)
     created_date = db.Column(db.DateTime(), default=datetime.now)
     order_items = db.relationship('OrderItem', backref='order')
 
@@ -91,7 +91,7 @@ class Order(db.Model):
         db.session.commit()
 
     def serialize(self):
-        """ Serializes a Pet into a dictionary """
+        """ Serializes an order into a dictionary """
         return {
             "id": self.id,
             "customer_id": self.customer_id,
