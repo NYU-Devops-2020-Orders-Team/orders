@@ -34,6 +34,23 @@ def index():
     )
 
 
+######################################################################
+# RETRIEVE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def get_orders(order_id):
+    """
+    Retrieve a single Order
+
+    This endpoint will return a Order based on it's id
+    """
+    app.logger.info("Request for order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
 if __name__ == '__main__':
     app.run()
 

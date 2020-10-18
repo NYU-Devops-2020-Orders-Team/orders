@@ -55,3 +55,15 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["name"], "Orders REST API Service")
         self.assertEqual(data["version"], "1.0")
+
+    def test_get_order(self):
+        """ Get a single Order """
+    #     # get the id of an order
+    #     test_order = self._create_orders(1)[0]
+    #     resp = self.app.get(
+    #         "/orders/{}".format(test_order.id), content_type="application/json"
+    #     )
+    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    #     data = resp.get_json()
+    #     self.assertEqual(data["name"], test_order.name)
+        

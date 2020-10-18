@@ -136,3 +136,9 @@ class Order(db.Model):
         db.init_app(app)
         app.app_context().push()
         db.create_all()
+
+    @classmethod
+    def find(cls, order_id):
+        """ Finds a Order by it's ID """
+        cls.logger.info("Processing lookup for id %s ...", order_id)
+        return cls.query.get(order_id)
