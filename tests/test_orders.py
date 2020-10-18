@@ -37,34 +37,34 @@ class TestOrders(unittest.TestCase):
     def test_init_order(self):
         """ Initialize an order and assert that it exists """
         order_items = [OrderItem(product="product", quantity=1, price=5, status="PLACED")]
-        order = Order(customer_id="123", order_items=order_items)
+        order = Order(customer_id=123, order_items=order_items)
         self.assertTrue(order is not None)
         self.assertEqual(order.id, None)
-        self.assertEqual(order.customer_id, "123")
+        self.assertEqual(order.customer_id, 123)
         self.assertEqual(len(order.order_items), 1)
 
     def test_repr(self):
         """ Create an order and test it's repr """
-        order = Order(id=1, customer_id="123")
+        order = Order(id=1, customer_id=123)
         self.assertEqual(order.__repr__(), "<Order 1>")
 
     def test_repr_with_no_item_id(self):
         """ Create an order and test it's repr with no item id """
-        order = Order(customer_id="123")
+        order = Order(customer_id=123)
         self.assertEqual(order.__repr__(), "<Order None>")
 
     def test_create_order(self):
         """ Create an order with a single item in the database """
         order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
         order_items = [order_item]
-        order = Order(customer_id="123", order_items=order_items)
+        order = Order(customer_id=123, order_items=order_items)
         self.assertTrue(order is not None)
         self.assertEqual(order.id, None)
         self.assertEqual(len(order.order_items), 1)
         self.assertEqual(order.order_items[0].item_id, None)
         order.create()
         self.assertEqual(order.id, 1)
-        self.assertEqual(order.customer_id, "123")
+        self.assertEqual(order.customer_id, 123)
         self.assertEqual(len(order.order_items), 1)
         self.assertEqual(order.order_items[0].item_id, 1)
         self.assertEqual(order.order_items[0].order_id, 1)
@@ -81,11 +81,11 @@ class TestOrders(unittest.TestCase):
         order_item1 = OrderItem(product="product1", quantity=1, price=5, status="PLACED")
         order_item2 = OrderItem(product="product2", quantity=1, price=5, status="PLACED")
         order_items = [order_item1, order_item2]
-        order = Order(customer_id="123", order_items=order_items)
+        order = Order(customer_id=123, order_items=order_items)
         order.create()
         self.assertTrue(order.id is not None)
         order_id = order.id
-        self.assertEqual(order.customer_id, "123")
+        self.assertEqual(order.customer_id, 123)
         self.assertEqual(len(order.order_items), 2)
         i = order.order_items[0].item_id
         for j in range(0, len(order.order_items)):
@@ -96,7 +96,7 @@ class TestOrders(unittest.TestCase):
     def test_create_order_with_no_item(self):
         """ Create an order with no items in the database """
         order_items = []
-        order = Order(customer_id="123", order_items=order_items)
+        order = Order(customer_id=123, order_items=order_items)
         self.assertRaises(DataValidationError, order.create)
 
     def test_serialize_an_order(self):
@@ -105,13 +105,13 @@ class TestOrders(unittest.TestCase):
         order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
         order_item2 = OrderItem(product="product2", quantity=1, price=5, status="PLACED")
         order_items = [order_item, order_item2]
-        order = Order(customer_id="123", created_date=date, order_items=order_items)
+        order = Order(customer_id=123, created_date=date, order_items=order_items)
         data = order.serialize()
         self.assertNotEqual(data, None)
         self.assertIn("id", data)
         self.assertEqual(data["id"], None)
         self.assertIn("customer_id", data)
-        self.assertEqual(data["customer_id"], "123")
+        self.assertEqual(data["customer_id"], 123)
         self.assertIn("created_date", data)
         self.assertEqual(data["created_date"], date)
         self.assertIn("order_items", data)
@@ -119,13 +119,13 @@ class TestOrders(unittest.TestCase):
 
     def test_deserialize_an_order(self):
         """ Test deserialization of an Order """
-        data = {"customer_id": "123",
+        data = {"customer_id": 123,
                 "order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
         order = Order()
         order.deserialize(data)
         self.assertNotEqual(order, None)
         self.assertEqual(order.id, None)
-        self.assertEqual(order.customer_id, "123")
+        self.assertEqual(order.customer_id, 123)
         self.assertEqual(order.created_date, None)
         self.assertEqual(len(order.order_items), 1)
         self.assertEqual(order.order_items[0].item_id, None)
