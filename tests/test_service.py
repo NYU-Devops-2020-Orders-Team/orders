@@ -55,3 +55,34 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["name"], "Orders REST API Service")
         self.assertEqual(data["version"], "1.0")
+
+
+    def test_create_orders(self):
+        ''''Create an order'''
+        resp = self.app.post('/orders',
+            json = {"customer_id": "c1", 
+                    "order_items": [
+                            {"product": "p1",
+                            "quantity": 5,
+                            "price": 500,
+                            "status": "PLACED"
+                            }]
+                    },
+            content_type='application/json')
+
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED,'Could not create test order')
+
+        # create an order with empty customer_id
+        resp = self.app.post('/orders',
+            json = {"customer_id": "", 
+                    "order_items": [
+                            {"product": "p1",
+                            "quantity": 5,
+                            "price": 500,
+                            "status": "PLACED"
+                            }]
+                    },
+            content_type='application/json')
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')        
+
