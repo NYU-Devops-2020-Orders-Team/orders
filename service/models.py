@@ -72,7 +72,7 @@ class Order(db.Model):
     # Order Table Schema
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.String(40), nullable=False)
+    customer_id = db.Column(db.Integer, nullable=False)
     created_date = db.Column(db.DateTime(), default=datetime.now)
     order_items = db.relationship('OrderItem', backref='order')
 
