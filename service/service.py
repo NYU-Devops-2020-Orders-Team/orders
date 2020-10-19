@@ -14,8 +14,9 @@ from werkzeug.exceptions import NotFound
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
 # variety of backends including SQLite, MySQL, and PostgreSQL
 from flask_sqlalchemy import SQLAlchemy
-from .models import Order,DataValidationError
+from .models import Order, DataValidationError
 from . import app
+
 
 ######################################################################
 # Error Handlers
@@ -39,17 +40,6 @@ def bad_request(error):
     )
 
 
-@app.errorhandler(status.HTTP_404_NOT_FOUND)
-def not_found(error):
-    """ Handles resources not found with 404_NOT_FOUND """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(status=status.HTTP_404_NOT_FOUND, error="Not Found", message=message),
-        status.HTTP_404_NOT_FOUND,
-    )
-
-
 @app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
 def method_not_supported(error):
     """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
@@ -62,21 +52,6 @@ def method_not_supported(error):
             message=message,
         ),
         status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
-
-
-@app.errorhandler(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-def mediatype_not_supported(error):
-    """ Handles unsuppoted media requests with 415_UNSUPPORTED_MEDIA_TYPE """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            error="Unsupported media type",
-            message=message,
-        ),
-        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
     )
 
 
@@ -112,6 +87,28 @@ def index():
 
 
 ######################################################################
+# ADD A NEW ORDER
+######################################################################
+@app.route('/orders', methods=['POST'])
+def create_orders():
+    """
+    Creates an order
+    This endpoint will create an order based the data in the body that is posted
+    """
+    app.logger.info("Request to create an order")
+    check_content_type("application/json")
+    order = Order()
+    order.deserialize(request.get_json())
+    order.create()
+    message = order.serialize()
+
+    # location_url = url_for("get_orders", pet_id=order.id, _external=True)
+
+    app.logger.info('Created Order with id: {}'.format(order.id))
+    return make_response(jsonify(message), status.HTTP_201_CREATED)
+
+
+######################################################################
 # LIST ALL ORDERS
 ######################################################################
 @app.route("/orders", methods=["GET"])
@@ -124,6 +121,7 @@ def list_orders():
     app.logger.info("Returning %d orders", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
+
 if __name__ == '__main__':
     app.run()
 
@@ -133,31 +131,6 @@ def init_db():
     global app
     Order.init_db(app)
 
-
-######################################################################
-# ADD A NEW ORDER
-######################################################################
-
-
-@app.route('/orders', methods=['POST'])
-def create_orders():
-    """
-    Creates an order
-    This endpoint will create an order based the data in the body that is posted
-    """
-    app.logger.info("Request to create an order")
-    check_content_type("application/json")
-    order = Order()
-
-    try:
-        order.deserialize(request.get_json())
-        order.create()
-        message = order.serialize()
-        app.logger.info('Created Order with id: {}'.format(order.id))
-        return make_response(jsonify(order.serialize()),status.HTTP_201_CREATED)
-
-    except Exception as e:
-        return request_validation_error(e)
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
