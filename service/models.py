@@ -90,6 +90,14 @@ class Order(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def update(self):
+        """
+        Updates an Order to the database
+        """
+        if not self.id:
+            raise DataValidationError("Update called with empty ID field")
+        db.session.commit()
+
     def serialize(self):
         """ Serializes an order into a dictionary """
         return {

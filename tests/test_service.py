@@ -12,6 +12,7 @@ from flask_api import status  # HTTP Status Codes
 from service.models import Order, DataValidationError, db
 from service import app
 from service.service import init_db
+from .order_factory import OrderFactory
 
 logging.disable(logging.CRITICAL)
 
@@ -55,3 +56,24 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["name"], "Orders REST API Service")
         self.assertEqual(data["version"], "1.0")
+
+    def test_update_order(self):
+        """ Update an existing Order """
+        # create an order to update
+        test_order = OrderFactory()
+        resp = self.app.post(
+            "/orders", json=test_order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # update the order
+        new_order = resp.get_json()
+        new_order["customer_id"] = 100
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["customer_id"], 100)
