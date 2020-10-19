@@ -139,6 +139,8 @@ class Order(db.Model):
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
+            if items is None or len(items) == 0:
+                raise DataValidationError("Order items can't be empty")
             for i in range(len(items)):
                 item = OrderItem()
                 item.deserialize(items[i])
