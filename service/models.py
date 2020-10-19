@@ -161,8 +161,13 @@ class Order(db.Model):
         return cls.query.all()
 
     @classmethod
+    def find(cls, order_id):
+        """ Finds a Order by it's ID """
+        cls.logger.info("Processing lookup for id %s ...", order_id)
+        return cls.query.get(order_id)
+
+    @classmethod
     def find_by_customer_id(cls, customer_id: int):
-        """Returns all of the orders with customer_id: customer_id
-        """
+        """Returns all of the orders with customer_id: customer_id """
         cls.logger.info("Processing customer_id query for %s ...", customer_id)
         return cls.query.filter(cls.customer_id == customer_id)
