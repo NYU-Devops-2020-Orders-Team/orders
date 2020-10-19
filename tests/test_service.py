@@ -10,6 +10,7 @@ import logging
 from flask_api import status  # HTTP Status Codes
 # from unittest.mock import MagicMock, patch
 from service.models import Order, DataValidationError, db
+from .order_factory import OrderFactory
 from service import app
 from service.service import init_db
 
@@ -59,28 +60,18 @@ class TestOrderService(TestCase):
 
     def test_create_orders(self):
         ''''Create an order'''
-        # test_order=Order()
-        # test_order.deserialize({"customer_id":123, 
-        #             "order_items": [
-        #                     {"product": "p1",
-        #                     "quantity": 5,
-        #                     "price": 500,
-        #                     "status": "PLACED"
-        #                     }]
-        #             })
-
-        # resp = self.app.post('/orders',
-        #     json =test_order,
-        #     content_type='application/json')
-
-        # self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        # # Check the data is correct
-        # new_order = resp.get_json()
-        # self.assertEqual(new_order["customer_id"], 
-        #     test_order.customer_id, "Names do not match")
-        # self.assertEqual(
-        #     new_order["order_items"], test_order.order_items, "order_items do not match"
-        # )
+        test_order = OrderFactory()
+        resp = self.app.post(
+            "/orders", json=test_order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(location != None)
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(new_pet["customer_id"], test_pet.customer_id, "customer_id do not match")
+        self.assertEqual(
+            new_order["order_items"], test_order.order_items, "order_items do not match"
+        )
 
         # create an order missing customer_id
         resp = self.app.post('/orders',
