@@ -85,7 +85,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, nullable=False)
     created_date = db.Column(db.DateTime(), default=datetime.now)
-    order_items = db.relationship('OrderItem', backref='order')
+    order_items = db.relationship('OrderItem', backref='order', cascade="all,delete", lazy=True)
 
     def __repr__(self):
         return "<Order %r>" % self.id
@@ -101,6 +101,12 @@ class Order(db.Model):
             raise DataValidationError("Order Items can't be empty")
 
         db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        """
+        Saves an order in the database
+        """
         db.session.commit()
 
     def serialize(self):

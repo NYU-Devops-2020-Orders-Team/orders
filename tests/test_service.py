@@ -71,11 +71,9 @@ class TestOrderService(TestCase):
             )
             new_order = resp.get_json()
             test_order.id = new_order["id"]
-
-            created_order = Order()
-            created_order.deserialize(new_order)
-            for i in range(len(created_order.order_items)):
-                test_order.order_items[i].item_id = created_order.order_items[i].item_id
+            order_items = new_order["order_items"]
+            for i in range(len(order_items)):
+                test_order.order_items[i].item_id = order_items[i]["item_id"]
             orders.append(test_order)
         return orders
 
@@ -257,3 +255,71 @@ class TestOrderService(TestCase):
 
         resp = self.app.get('/orders/500Error')
         self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _create_new_order(self, order_factory):
+        resp = self.app.post('/orders',
+                             json=order_factory.serialize(),
+                             content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        return resp.get_json()
+
+    def test_cancel_order(self):
+        """ Test Cancellation of an order """
+        order = self._create_orders(1)[0]
+        resp = self.app.put("/orders/{}/cancel".format(order.id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, 'Could not cancel the order')
+
+    def test_cancel_order_not_found(self):
+        """ Test Cancellation of an order when order does not exist"""
+        resp = self.app.put("/orders/{}/cancel".format(0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cancel_order_with_all_shipped(self):
+        """ Test Cancellation of an order with all shipped/delivered items """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "SHIPPED"
+        order_factory.order_items[1].status = "DELIVERED"
+
+        new_order_id = self._create_new_order(order_factory)["id"]
+
+        resp = self.app.put("/orders/{}/cancel".format(new_order_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cancel_order_with_some_shipped(self):
+        """ Test Cancellation of an order with all shipped/delivered items """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "SHIPPED"
+
+        new_order_id = self._create_new_order(order_factory)["id"]
+
+        resp = self.app.put("/orders/{}/cancel".format(new_order_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_cancel_order_item(self):
+        """ Test Cancellation of an order item """
+        order = self._create_orders(1)[0]
+        item_id = order.order_items[0].item_id
+        resp = self.app.put("/orders/{}/items/{}/cancel".format(order.id, item_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, 'Could not cancel the order')
+
+    def test_cancel_order_item_order_not_found(self):
+        """ Test Cancellation of an order item when order does not exist"""
+        resp = self.app.put("/orders/{}/items/{}/cancel".format(0, 0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cancel_order_item_not_found(self):
+        """ Test Cancellation of an order item when order item does not exist"""
+        order = self._create_orders(1)[0]
+        resp = self.app.put("/orders/{}/items/{}/cancel".format(order.id, 0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cancel_order_item_with_shipped(self):
+        """ Test Cancellation of an order with all shipped/delivered items """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "SHIPPED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/cancel".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

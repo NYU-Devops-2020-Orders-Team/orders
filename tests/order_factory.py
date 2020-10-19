@@ -40,7 +40,7 @@ class OrderItemFactory(BaseFactory):
     product = factory.Faker('sentence', nb_words=1, variable_nb_words=True)
     quantity = random.randint(0, 100000)
     price = random.uniform(0, 100000)
-    status = FuzzyChoice(choices=["PLACED", "SHIPPED", "DELIVERED", "CANCELLED"])
+    status = FuzzyChoice(choices=["PLACED", "CANCELLED"])
     order_id = factory.SubFactory(OrderFactory)
 
 if __name__ == "__main__":
