@@ -52,6 +52,17 @@ class OrderItem(db.Model):
             self.quantity = data["quantity"]
             self.price = data["price"]
             self.status = data["status"]
+
+            if self.product is None or type(self.product) is not str:
+                raise DataValidationError("Invalid order: invalid product")
+            if self.quantity is None or type(self.quantity) is not int:
+                raise DataValidationError("Invalid order: invalid quantity")
+            if self.price is None or (type(self.price) is not float and type(self.price) is not int):
+                raise DataValidationError("Invalid order: invalid price")
+            if self.status is None or type(self.status) is not str:
+                raise DataValidationError("Invalid order: invalid status")
+            if self.status not in ['PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
+                raise DataValidationError("Invalid order: status not in list")
         except KeyError as error:
             raise DataValidationError("Invalid order: missing " + error.args[0])
         except TypeError as error:
@@ -128,7 +139,7 @@ class Order(db.Model):
         try:
             self.customer_id = data["customer_id"]
             # check if customer_id is integer
-            if type(self.customer_id) is not int:
+            if self.customer_id is None or type(self.customer_id) is not int:
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
@@ -170,3 +181,9 @@ class Order(db.Model):
         """ Finds a Order by it's ID """
         cls.logger.info("Processing lookup for id %s ...", order_id)
         return cls.query.get(order_id)
+
+    @classmethod
+    def find_by_customer_id(cls, customer_id: int):
+        """Returns all of the orders with customer_id: customer_id """
+        cls.logger.info("Processing customer_id query for %s ...", customer_id)
+        return cls.query.filter(cls.customer_id == customer_id)

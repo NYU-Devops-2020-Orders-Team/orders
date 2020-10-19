@@ -66,7 +66,7 @@ class TestOrderItems(unittest.TestCase):
 
     def test_deserialize_an_order(self):
         """ Test deserialization of an Order Item"""
-        data = {"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}
+        data = {"product": "product", "quantity": 1, "price": 5.0, "status": "PLACED"}
         order_item = OrderItem()
         order_item.deserialize(data)
         self.assertNotEqual(order_item, None)
@@ -85,5 +85,35 @@ class TestOrderItems(unittest.TestCase):
     def test_deserialize_bad_data_with_keys_missing(self):
         """ Test deserialization of bad order item data with few keys missing """
         data = {"product": "product", "status": "PLACED"}
+        order = OrderItem()
+        self.assertRaises(DataValidationError, order.deserialize, data)
+
+    def test_deserialize_bad_data_with_wrong_product(self):
+        """ Test deserialization of bad order item data with product None """
+        data = {"product": None, "quantity": 1, "price": 5.0, "status": "PLACED"}
+        order = OrderItem()
+        self.assertRaises(DataValidationError, order.deserialize, data)
+
+    def test_deserialize_bad_data_with_wrong_quantity(self):
+        """ Test deserialization of bad order item data with quantity not as int """
+        data = {"product": "product", "quantity": "1", "price": 5.0, "status": "PLACED"}
+        order = OrderItem()
+        self.assertRaises(DataValidationError, order.deserialize, data)
+
+    def test_deserialize_bad_data_with_wrong_price(self):
+        """ Test deserialization of bad order item data with price not as float/int """
+        data = {"product": "product", "quantity": 1, "price": "5.0", "status": "PLACED"}
+        order = OrderItem()
+        self.assertRaises(DataValidationError, order.deserialize, data)
+
+    def test_deserialize_bad_data_with_wrong_status(self):
+        """ Test deserialization of bad order item data with status as None """
+        data = {"product": "product", "quantity": 1, "price": 5.0, "status": None}
+        order = OrderItem()
+        self.assertRaises(DataValidationError, order.deserialize, data)
+
+    def test_deserialize_bad_data_with_wrong_status_not_in_list(self):
+        """ Test deserialization of bad order item data with status as None """
+        data = {"product": "product", "quantity": 1, "price": 5.0, "status": "None"}
         order = OrderItem()
         self.assertRaises(DataValidationError, order.deserialize, data)
