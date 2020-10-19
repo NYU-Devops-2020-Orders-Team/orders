@@ -59,10 +59,32 @@ class TestOrderService(TestCase):
 
     def test_create_orders(self):
         ''''Create an order'''
+        # test_order={"customer_id": "c1", 
+        #             "order_items": [
+        #                     {"product": "p1",
+        #                     "quantity": 5,
+        #                     "price": 500,
+        #                     "status": "PLACED"
+        #                     }]
+        #             }
+
+        # resp = self.app.post('/orders',
+        #     json =test_order,
+        #     content_type='application/json')
+
+        # self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # # Check the data is correct
+        # new_order = resp.get_json()
+        # self.assertEqual(new_order["customer_id"], test_order.customer_id, "Names do not match")
+        # self.assertEqual(
+        #     new_order["order_items"], test_order.order_items, "order_items do not match"
+        # )
+
+        # create an order missing customer_id
         resp = self.app.post('/orders',
-            json = {"customer_id": "c1", 
+            json = {"customer_id":None, 
                     "order_items": [
-                            {"product": "p1",
+                            {
                             "quantity": 5,
                             "price": 500,
                             "status": "PLACED"
@@ -70,13 +92,14 @@ class TestOrderService(TestCase):
                     },
             content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED,'Could not create test order')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')    
 
-        # create an order with empty customer_id
+
+        # create an order missing product of order_items
         resp = self.app.post('/orders',
-            json = {"customer_id": "", 
+            json = {"customer_id":123, 
                     "order_items": [
-                            {"product": "p1",
+                            {
                             "quantity": 5,
                             "price": 500,
                             "status": "PLACED"
@@ -84,5 +107,47 @@ class TestOrderService(TestCase):
                     },
             content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')        
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')    
+
+         # create an order missing quantity of order_items
+        resp = self.app.post('/orders',
+            json = {"customer_id":123, 
+                    "order_items": [
+                            {"product": "p1",
+                            "price": 500,
+                            "status": "PLACED"
+                            }]
+                    },
+            content_type='application/json')
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')    
+
+           # create an order missing price of order_items
+        resp = self.app.post('/orders',
+            json = {"customer_id":123, 
+                    "order_items": [
+                            {"product": "p1",
+                            "quantity": 5,
+                            "status": "PLACED"
+                            }]
+                    },
+            content_type='application/json')
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')    
+
+           # create an order missing status of order_items
+        resp = self.app.post('/orders',
+            json = {"customer_id":123, 
+                    "order_items": [
+                            {"product": "p1",
+                            "quantity": 5,
+                            "price": 500
+                            }]
+                    },
+            content_type='application/json')
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')    
+
+     
+
 
