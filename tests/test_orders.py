@@ -148,12 +148,6 @@ class TestOrders(unittest.TestCase):
         order_items1 = [OrderItem(product="product1", quantity=1, price=5, status="PLACED")]
         order1 = Order(customer_id=111, order_items=order_items1)
         order1.create()
-        order_items2 = [OrderItem(product="product2", quantity=1, price=5, status="PLACED")]
-        order2 = Order(customer_id=222, order_items=order_items2)
-        order2.create()
-        order_items3 = [OrderItem(product="product3", quantity=1, price=5, status="PLACED")]
-        order3 = Order(customer_id=333, order_items=order_items3)
-        order3.create()
         order = Order.find(order1.id)
         self.assertIsNot(order, None)
         self.assertEqual(order.id, order1.id)
