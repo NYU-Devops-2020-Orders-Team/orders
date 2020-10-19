@@ -37,7 +37,7 @@ class OrderItemFactory(BaseFactory):
         model = OrderItem
     
     item_id = factory.Sequence(lambda n: n)
-    product = factory.Faker('sentence', nb_words=3, variable_nb_words=True)
+    product = factory.Faker('sentence', nb_words=1, variable_nb_words=True)
     quantity = random.randint(0, 100000)
     price = random.uniform(0, 100000)
     status = FuzzyChoice(choices=["PLACED", "SHIPPED", "DELIVERED", "CANCELLED"])
