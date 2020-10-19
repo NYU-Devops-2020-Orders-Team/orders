@@ -53,13 +53,13 @@ class OrderItem(db.Model):
             self.price = data["price"]
             self.status = data["status"]
 
-            if self.product is None or type(self.product) is not str:
+            if self.product is None or isinstance(self.product, str) is False:
                 raise DataValidationError("Invalid order: invalid product")
-            if self.quantity is None or type(self.quantity) is not int:
+            if self.quantity is None or isinstance(self.quantity, int) is False:
                 raise DataValidationError("Invalid order: invalid quantity")
-            if self.price is None or (type(self.price) is not float and type(self.price) is not int):
+            if self.price is None or (isinstance(self.price, float) is False and isinstance(self.price, int) is False):
                 raise DataValidationError("Invalid order: invalid price")
-            if self.status is None or type(self.status) is not str:
+            if self.status is None or isinstance(self.status, str) is False:
                 raise DataValidationError("Invalid order: invalid status")
             if self.status not in ['PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
                 raise DataValidationError("Invalid order: status not in list")
@@ -129,7 +129,7 @@ class Order(db.Model):
         try:
             self.customer_id = data["customer_id"]
             # check if customer_id is integer
-            if self.customer_id is None or type(self.customer_id) is not int:
+            if self.customer_id is None or isinstance(self.customer_id, int) is False:
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
@@ -140,7 +140,6 @@ class Order(db.Model):
         except KeyError as error:
             raise DataValidationError("Invalid order: missing " + error.args[0])
         except TypeError as error:
-            print(error)
             raise DataValidationError(
                 "Invalid order: body of request contained bad or no data"
             )
@@ -151,7 +150,6 @@ class Order(db.Model):
         """Initializes the database session
 
         :param app: the Flask app
-        :type data: Flask
 
         """
         cls.logger.info("Initializing database")

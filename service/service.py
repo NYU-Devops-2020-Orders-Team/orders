@@ -1,17 +1,7 @@
-from flask import Flask
-from flask_api import status  # HTTP Status Codes
-
-# Import Flask application
-from . import __init__
-
-import os
-import sys
-import logging
-from flask import Flask, jsonify, request, url_for, make_response, abort
+from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from werkzeug.exceptions import NotFound
 
-from flask_sqlalchemy import SQLAlchemy
 from .models import Order, DataValidationError
 from . import app
 
