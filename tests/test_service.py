@@ -12,6 +12,7 @@ from flask_api import status  # HTTP Status Codes
 from service.models import Order, DataValidationError, db
 from service import app
 from service.service import init_db
+from .order_factory import OrderFactory, OrderItemFactory
 
 logging.disable(logging.CRITICAL)
 
@@ -48,6 +49,30 @@ class TestOrderService(TestCase):
         db.session.remove()
         db.drop_all()
 
+    # def _create_orders(self, count):
+    #     """ Factory method to create orders in bulk """
+    #     orders = []
+    #     for _ in range(count):
+    #         item1 = OrderItemFactory()
+    #         item2 = OrderItemFactory()
+    #         item3 = OrderItemFactory()
+    #         test_order = OrderFactory(items = [item1, item2, item3])
+    #         resp = self.app.post(
+    #             "/orders", json=test_order.serialize(), content_type="application/json"
+    #         )
+    #         self.assertEqual(
+    #             resp.status_code, status.HTTP_201_CREATED, "Could not create test order"
+    #         )
+    #         new_order = resp.get_json()
+    #         test_order.id = new_order["id"]
+            
+    #         created_order = Order()
+    #         created_order.deserialize(new_order)
+    #         for i in range(len(created_order.order_items)):
+    #             test_order.order_items[i].item_id = created_order.order_items[i].item_id
+    #         orders.append(test_order)
+    #     return orders
+
     def test_index(self):
         """ Test the Home Page """
         resp = self.app.get("/")
@@ -56,6 +81,7 @@ class TestOrderService(TestCase):
         self.assertEqual(data["name"], "Orders REST API Service")
         self.assertEqual(data["version"], "1.0")
 
+<<<<<<< HEAD
     def test_get_order(self):
         """ Get a single Order """
         # get the id of an order
@@ -67,3 +93,19 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["name"], test_order.name)
         
+=======
+    def test_get_order_list_empty_list(self):
+        """ Get a list of Orders when no orders present in database """
+        resp = self.app.get("/orders")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    # def test_get_order_list(self):
+    #     """ Get a list of Orders """
+    #     self._create_orders(5)
+    #     resp = self.app.get("/orders")
+    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    #     data = resp.get_json()
+    #     self.assertEqual(len(data), 5)
+>>>>>>> master
