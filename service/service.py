@@ -39,6 +39,16 @@ def bad_request(error):
         status.HTTP_400_BAD_REQUEST,
     )
 
+@app.errorhandler(status.HTTP_404_NOT_FOUND)
+def not_found(error):
+    """ Handles resources not found with 404_NOT_FOUND """
+    app.logger.warning(str(error))
+    return (
+        jsonify(
+            status=status.HTTP_404_NOT_FOUND, error="Not Found", message=str(error)
+        ),
+        status.HTTP_404_NOT_FOUND,
+    )
 
 @app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
 def method_not_supported(error):
@@ -85,7 +95,6 @@ def index():
         status.HTTP_200_OK,
     )
 
-
 ######################################################################
 # ADD A NEW ORDER
 ######################################################################
@@ -121,6 +130,21 @@ def list_orders():
     app.logger.info("Returning %d orders", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
+######################################################################
+# RETRIEVE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def get_orders(order_id):
+    """
+    Retrieve a single Order
+
+    This endpoint will return a Order based on it's id
+    """
+    app.logger.info("Request for order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 if __name__ == '__main__':
     app.run()

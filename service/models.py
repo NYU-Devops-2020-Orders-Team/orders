@@ -148,3 +148,9 @@ class Order(db.Model):
         """ Returns all of the Orders in the database """
         cls.logger.info("Listing all Orders")
         return cls.query.all()
+
+    @classmethod
+    def find(cls, order_id):
+        """ Finds a Order by it's ID """
+        cls.logger.info("Processing lookup for id %s ...", order_id)
+        return cls.query.get(order_id)
