@@ -97,10 +97,10 @@ class TestOrderService(TestCase):
                                    },
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED, 'Could not create order')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_create_orders_wrong_content_type(self):
-        """ create an order """
+        """ create an order with wrong content type """
         resp = self.app.post('/orders',
                              json={"customer_id": 123,
                                    "order_items": [
@@ -216,14 +216,6 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 0)
-        
-    # def test_get_order_list(self):
-    #     """ Get a list of Orders """
-    #     self._create_orders(5)
-    #     resp = self.app.get("/orders")
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    #     data = resp.get_json()
-    #     self.assertEqual(len(data), 5)
 
     def test_get_order_list(self):
         """ Get a list of Orders """
@@ -240,11 +232,20 @@ class TestOrderService(TestCase):
 
     def test_get_order(self):
         """ Get a single Order """
-        # get the id of an order
-        test_order = self._create_orders(1)[0]
+        test_order = self._create_orders(5)[0]
         resp = self.app.get(
             "/orders/{}".format(test_order.id), content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(data["name"], test_order.name)
+        self.assertEqual(data["id"], test_order.id)
+        self.assertEqual(data["customer_id"], test_order.customer_id)
+        self.assertEqual(len(data["order_items"]), len(test_order.order_items))
+
+    def test_get_order_invalid_id(self):
+        """ Get an single Order with an invalid id """
+        resp = self.app.get(
+            "/orders/{}".format(0), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND, "Not Found")
+
