@@ -143,7 +143,7 @@ class TestOrderService(TestCase):
                              content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
-    def test_create_orders_customer_id_order_items_missing(self):
+    def test_create_orders_order_items_missing(self):
         """ create an order missing order_items """
         resp = self.app.post('/orders',
                              json={"customer_id": 123,
@@ -153,8 +153,8 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
-    def test_create_orders_customer_id_order_items_missing(self):
-        """ create an order missing product of order_items """
+    def test_create_orders_missing_product(self):
+        """ create an order missing product in order_items """
         resp = self.app.post('/orders',
                              json={"customer_id": 123,
                                    "order_items": [
@@ -168,8 +168,8 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
-    def test_create_orders_customer_id_order_items_missing_quantity(self):
-        """ create an order missing quantity of order_items """
+    def test_create_orders_missing_quantity(self):
+        """ create an order missing quantity in order_items """
         resp = self.app.post('/orders',
                              json={"customer_id": 123,
                                    "order_items": [
@@ -182,8 +182,7 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
-    def test_create_orders_customer_id_order_items_missing_price(self):
-
+    def test_create_orders_missing_price(self):
         """ create an order missing price of order_items """
         resp = self.app.post('/orders',
                              json={"customer_id": 123,
@@ -197,7 +196,7 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
-    def test_create_orders_customer_id_order_items_missing_status(self):
+    def test_create_orders_missing_status(self):
         """ create an order missing status of order_items """
         resp = self.app.post('/orders',
                              json={"customer_id": 123,
