@@ -165,6 +165,29 @@ class TestOrders(unittest.TestCase):
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
 
+    def test_find_order(self):
+        """ Find an Order by ID """
+        order_items1 = [OrderItem(product="product1", quantity=1, price=5, status="PLACED")]
+        order1 = Order(customer_id=111, order_items=order_items1)
+        order1.create()
+        order_items2 = [OrderItem(product="product2", quantity=1, price=5, status="PLACED")]
+        order2 = Order(customer_id=222, order_items=order_items2)
+        order2.create()
+        order_items3 = [OrderItem(product="product3", quantity=1, price=5, status="PLACED")]
+        order3 = Order(customer_id=333, order_items=order_items3)
+        order3.create()
+        order = Order.find(order1.id)
+        self.assertIsNot(order, None)
+        self.assertEqual(order.id, order1.id)
+        self.assertEqual(order.customer_id, 111)
+        self.assertEqual(len(order.order_items), 1)
+        self.assertEqual(order.order_items[0].product, "product1")
+    
+    def test_find_invalid_order(self):
+        """ Find an Order by an invalid ID """
+        order = Order.find(0)
+        self.assertEqual(order, None)
+
 
 ######################################################################
 #   M A I N
