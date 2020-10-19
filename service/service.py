@@ -167,13 +167,6 @@ def update_orders(order_id):
         raise NotFound("Order with id '{}' was not found.".format(order_id))
     order.deserialize(request.get_json())
     order.id = order_id
-    # the following if statements for value checking are covered in deserialize function
-    # if not order.customer_id:
-    #     raise DataValidationError("Customer id can't be empty")
-    # if not isinstance(order.customer_id, int):
-    #     raise DataValidationError("Customer id should be an integer")
-    # if len(order.order_items) == 0:
-    #     raise DataValidationError("Order Items can't be empty")
     order.update()
 
     app.logger.info("Order with ID [%s] updated.", order_id)
