@@ -103,7 +103,7 @@ class TestOrders(unittest.TestCase):
         """ Update an Order """
         order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
         order_items = [order_item1]
-        order = Order(id = 1, customer_id=111, order_items=order_items)
+        order = Order(id=1, customer_id=111, order_items=order_items)
         order.create()
         self.assertEqual(order.id, 1)
         self.assertEqual(len(order.order_items), 1)
@@ -120,6 +120,25 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(len(orders), 1)
         self.assertEqual(order.id, 1)
         self.assertEqual(len(order.order_items), 2)
+
+    def test_update_order_with_no_id(self):
+        """ Update an order with no id """
+        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_items = [order_item]
+        order = Order(customer_id=123, order_items=order_items)
+        self.assertRaises(DataValidationError, order.update)
+
+    def test_update_order_with_no_customer_id(self):
+        """ Update an order with no customer id """
+        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_items = [order_item]
+        order = Order(id=1, order_items=order_items)
+        self.assertRaises(DataValidationError, order.update)
+
+    def test_update_order_with_no_order_items(self):
+        """ Update an order with no order items"""
+        order = Order(id=1, customer_id=123)
+        self.assertRaises(DataValidationError, order.update)
 
     def test_serialize_an_order(self):
         """ Test serialization of an Order """
@@ -176,7 +195,7 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order.customer_id, 111)
         self.assertEqual(len(order.order_items), 1)
         self.assertEqual(order.order_items[0].product, "product1")
-    
+
     def test_find_invalid_order(self):
         """ Find an Order by an invalid ID """
         order = Order.find(0)
