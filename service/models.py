@@ -85,6 +85,13 @@ class Order(db.Model):
         """
         if self.customer_id is None:
             raise DataValidationError("Customer Id can't be empty")
+        
+        # check if customer_id is integer
+        try:
+            int(self.customer_id)
+        except:
+            raise DataValidationError("Customer Id must be integer") 
+
         if len(self.order_items) == 0:
             raise DataValidationError("Order Items can't be empty")
         db.session.add(self)
