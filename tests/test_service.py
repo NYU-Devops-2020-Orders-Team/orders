@@ -59,14 +59,15 @@ class TestOrderService(TestCase):
 
     def test_create_orders(self):
         ''''Create an order'''
-        # test_order={"customer_id": "c1", 
+        # test_order=Order()
+        # test_order.deserialize({"customer_id":123, 
         #             "order_items": [
         #                     {"product": "p1",
         #                     "quantity": 5,
         #                     "price": 500,
         #                     "status": "PLACED"
         #                     }]
-        #             }
+        #             })
 
         # resp = self.app.post('/orders',
         #     json =test_order,
@@ -75,7 +76,8 @@ class TestOrderService(TestCase):
         # self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         # # Check the data is correct
         # new_order = resp.get_json()
-        # self.assertEqual(new_order["customer_id"], test_order.customer_id, "Names do not match")
+        # self.assertEqual(new_order["customer_id"], 
+        #     test_order.customer_id, "Names do not match")
         # self.assertEqual(
         #     new_order["order_items"], test_order.order_items, "order_items do not match"
         # )
@@ -94,6 +96,19 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')    
 
+        # create an order with invalid customer_id
+        resp = self.app.post('/orders',
+            json = {"customer_id":"abc", 
+                    "order_items": [
+                            {
+                            "quantity": 5,
+                            "price": 500,
+                            "status": "PLACED"
+                            }]
+                    },
+            content_type='application/json')
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST,'Could not identify bad request')  
 
         # create an order missing product of order_items
         resp = self.app.post('/orders',
