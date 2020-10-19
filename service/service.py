@@ -115,8 +115,13 @@ def create_orders():
 def list_orders():
     """ Returns all of the Orders """
     app.logger.info("Request for order list")
-    orders = []
-    orders = Order.all()
+
+    customer_id = request.args.get("customer_id")
+    if customer_id:
+        orders = Order.find_by_customer_id(customer_id)
+    else:
+        orders = Order.all()
+
     results = [order.serialize() for order in orders]
     app.logger.info("Returning %d orders", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
