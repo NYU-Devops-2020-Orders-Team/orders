@@ -111,7 +111,7 @@ def create_orders():
     order.create()
     message = order.serialize()
 
-    # location_url = url_for("get_orders", pet_id=order.id, _external=True)
+    # location_url = url_for("get_orders", order_id=order.id, _external=True)
 
     app.logger.info('Created Order with id: {}'.format(order.id))
     return make_response(jsonify(message), status.HTTP_201_CREATED)
@@ -152,7 +152,7 @@ def get_orders(order_id):
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 ######################################################################
-# UPDATE AN EXISTING PET
+# UPDATE AN EXISTING ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["PUT"])
 def update_orders(order_id):
