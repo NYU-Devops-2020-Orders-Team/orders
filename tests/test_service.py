@@ -99,6 +99,7 @@ class TestOrderService(TestCase):
     def test_update_order(self):
         """ Update an existing Order """
         # create an order to update
+
         test_order = OrderFactory()
         resp = self.app.post(
             "/orders", json=test_order.serialize(), content_type="application/json"
@@ -120,14 +121,17 @@ class TestOrderService(TestCase):
     def test_update_order_raise_errors(self):
         """ Update an existing Order """
         # create an order to update
-        test_order = OrderFactory()
+        item1 = OrderItemFactory()
+        item2 = OrderItemFactory()
+        item3 = OrderItemFactory()
+        test_order = OrderFactory(items = [item1, item2, item3])
         resp = self.app.post(
             "/orders", json=test_order.serialize(), content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         # update the order
         new_order = resp.get_json()
-        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Customer id should be an integer
         new_order["customer_id"] = "100"
         resp = self.app.put(
@@ -135,9 +139,9 @@ class TestOrderService(TestCase):
             json=new_order,
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Customer id can't be empty
         new_order["customer_id"] = None
         resp = self.app.put(
@@ -145,9 +149,9 @@ class TestOrderService(TestCase):
             json=new_order,
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Update called with empty id field
         new_order["customer_id"] = 100
         new_order["id"] = None
@@ -156,9 +160,9 @@ class TestOrderService(TestCase):
             json=new_order,
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Id should be an integer
         new_order["id"] = "123"
         resp = self.app.put(
@@ -166,9 +170,9 @@ class TestOrderService(TestCase):
             json=new_order,
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Order Items can't be empty
         new_order["order_items"].clear()  
         resp = self.app.put(
@@ -176,5 +180,4 @@ class TestOrderService(TestCase):
             json=new_order,
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-        
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
