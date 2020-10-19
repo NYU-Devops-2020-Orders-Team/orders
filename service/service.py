@@ -151,6 +151,23 @@ def get_orders(order_id):
         raise NotFound("Order with id '{}' was not found.".format(order_id))
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
+######################################################################
+# DELETE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_orders(order_id):
+    """
+    Delete an Order
+    This endpoint will delete an Order based the id specified in the path
+    """
+    app.logger.info("Request to delete order with id: %s", order_id)
+    order = Order.find(order_id)
+    if order:
+        order.delete()
+
+    app.logger.info("Order with ID [%s] delete complete.", order_id)
+    return make_response("", status.HTTP_204_NO_CONTENT)
+
 if __name__ == '__main__':
     app.run()
 
