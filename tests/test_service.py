@@ -240,7 +240,6 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND, "Not Found")
 
-
     @patch('service.service.create_orders')
     def test_bad_request(self, bad_request_mock):
         """ Test a Bad Request error from Create Order """
