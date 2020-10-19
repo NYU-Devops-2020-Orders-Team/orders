@@ -77,3 +77,64 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_order = resp.get_json()
         self.assertEqual(updated_order["customer_id"], 100)
+
+    def test_update_order_raise_errors(self):
+        """ Update an existing Order """
+        # create an order to update
+        test_order = OrderFactory()
+        resp = self.app.post(
+            "/orders", json=test_order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # update the order
+        new_order = resp.get_json()
+        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # Customer id should be an integer
+        new_order["customer_id"] = "100"
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # Customer id can't be empty
+        new_order["customer_id"] = None
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # Update called with empty id field
+        new_order["customer_id"] = 100
+        new_order["id"] = None
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # Id should be an integer
+        new_order["id"] = "123"
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        # intend to raise a DataValidationError and get 404_NOT_FOUND
+        # Order Items can't be empty
+        new_order["order_items"].clear()  
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

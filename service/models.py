@@ -95,7 +95,15 @@ class Order(db.Model):
         Updates an Order to the database
         """
         if not self.id:
-            raise DataValidationError("Update called with empty ID field")
+            raise DataValidationError("Update called with empty id field")
+        if self.customer_id is None:
+            raise DataValidationError("Customer id can't be empty")
+        if len(self.order_items) == 0:
+            raise DataValidationError("Order Items can't be empty")
+        if not isinstance(self.id, int):
+            raise DataValidationError("Id should be an integer")
+        if not isinstance(self.customer_id, int):
+            raise DataValidationError("Customer id should be an integer")
         db.session.commit()
 
     def serialize(self):
