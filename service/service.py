@@ -47,7 +47,6 @@ def list_orders():
     app.logger.info("Returning %d orders", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
-
 if __name__ == '__main__':
     app.run()
 

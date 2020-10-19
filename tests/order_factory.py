@@ -5,7 +5,6 @@ import factory
 from factory.fuzzy import FuzzyChoice
 from flask_sqlalchemy import SQLAlchemy
 from service.models import Order, OrderItem
-from datetime import datetime
 import random
 
 db = SQLAlchemy()
@@ -23,7 +22,6 @@ class OrderFactory(BaseFactory):
 
     id = factory.Sequence(lambda n: n)
     customer_id = random.randint(0, 100000)
-    created_date = datetime.now
 
     @factory.post_generation
     def items(self, create, extracted, **kwargs):
