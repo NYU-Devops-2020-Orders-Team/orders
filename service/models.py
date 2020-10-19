@@ -143,3 +143,9 @@ class Order(db.Model):
         db.init_app(app)
         app.app_context().push()
         db.create_all()
+
+    @classmethod
+    def all(cls):
+        """ Returns all of the Orders in the database """
+        cls.logger.info("Listing all Orders")
+        return cls.query.all()
