@@ -100,7 +100,7 @@ class TestOrders(unittest.TestCase):
         self.assertRaises(DataValidationError, order.create)
 
     def test_update_an_order(self):
-        """ Update an Order """
+        """ Update an esisting Order """
         order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
         order_items = [order_item1]
         order = Order(id = 1, customer_id=111, order_items=order_items)
@@ -120,6 +120,14 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(len(orders), 1)
         self.assertEqual(order.id, 1)
         self.assertEqual(len(order.order_items), 2)
+
+    def test_update_an_order(self):
+        """ Update a non-existing Order """
+        order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
+        order_items = [order_item1]
+        order = Order(id = 1234567, customer_id=111, order_items=order_items)
+        order.update()
+        self.assertRaises(DataValidationError)
 
     def test_serialize_an_order(self):
         """ Test serialization of an Order """
