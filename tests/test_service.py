@@ -80,8 +80,22 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["name"], "Orders REST API Service")
         self.assertEqual(data["version"], "1.0")
+    
+    def test_get_order_list_empty_list(self):
+        """ Get a list of Orders when no orders present in database """
+        resp = self.app.get("/orders")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+        
+    # def test_get_order_list(self):
+    #     """ Get a list of Orders """
+    #     self._create_orders(5)
+    #     resp = self.app.get("/orders")
+    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    #     data = resp.get_json()
+    #     self.assertEqual(len(data), 5)
 
-<<<<<<< HEAD
     def test_get_order(self):
         """ Get a single Order """
         # get the id of an order
@@ -92,20 +106,3 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["name"], test_order.name)
-        
-=======
-    def test_get_order_list_empty_list(self):
-        """ Get a list of Orders when no orders present in database """
-        resp = self.app.get("/orders")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 0)
-
-    # def test_get_order_list(self):
-    #     """ Get a list of Orders """
-    #     self._create_orders(5)
-    #     resp = self.app.get("/orders")
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    #     data = resp.get_json()
-    #     self.assertEqual(len(data), 5)
->>>>>>> master

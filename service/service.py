@@ -33,9 +33,20 @@ def index():
         status.HTTP_200_OK,
     )
 
+######################################################################
+# LIST ALL ORDERS
+######################################################################
+@app.route("/orders", methods=["GET"])
+def list_orders():
+    """ Returns all of the Orders """
+    app.logger.info("Request for order list")
+    orders = []
+    orders = Order.all()
+    results = [order.serialize() for order in orders]
+    app.logger.info("Returning %d orders", len(results))
+    return make_response(jsonify(results), status.HTTP_200_OK)
 
 ######################################################################
-<<<<<<< HEAD
 # RETRIEVE AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["GET"])
@@ -50,20 +61,6 @@ def get_orders(order_id):
     if not order:
         raise NotFound("Order with id '{}' was not found.".format(order_id))
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
-
-=======
-# LIST ALL ORDERS
-######################################################################
-@app.route("/orders", methods=["GET"])
-def list_orders():
-    """ Returns all of the Orders """
-    app.logger.info("Request for order list")
-    orders = []
-    orders = Order.all()
-    results = [order.serialize() for order in orders]
-    app.logger.info("Returning %d orders", len(results))
-    return make_response(jsonify(results), status.HTTP_200_OK)
->>>>>>> master
 
 if __name__ == '__main__':
     app.run()
