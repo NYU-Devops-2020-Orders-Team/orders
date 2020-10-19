@@ -27,6 +27,12 @@ class OrderItem(db.Model):
     def __repr__(self):
         return "<OrderItem %r>" % self.item_id
 
+    def update(self):
+        """
+        Updates an Order to the database
+        """
+        db.session.commit()
+
     def serialize(self):
         """ Serializes a OrderItem into a dictionary """
         return {
@@ -107,6 +113,8 @@ class Order(db.Model):
         """
         Updates an Order to the database
         """
+        # for item in self.order_items:
+        #     item.update()
         db.session.commit()
 
     def serialize(self):
@@ -133,6 +141,8 @@ class Order(db.Model):
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
+            if items is None or len(items) == 0:
+                raise DataValidationError("Order items can't be empty")
             for i in range(len(items)):
                 item = OrderItem()
                 item.deserialize(items[i])

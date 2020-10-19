@@ -167,8 +167,9 @@ def update_orders(order_id):
         raise NotFound("Order with id '{}' was not found.".format(order_id))
     order.deserialize(request.get_json())
     order.id = order_id
+    for item in order.order_items:
+        item.update(）
     order.update()
-
     app.logger.info("Order with ID [%s] updated.", order_id)
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 

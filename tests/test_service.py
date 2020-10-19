@@ -240,8 +240,8 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND, "Not Found")
 
-    def test_update_order(self):
-        """ Update an existing Order """
+    def test_update_order_with_customer_id(self):
+        """ Update an existing Order with valid customer_id"""
         # create an order to update
         test_order = self._create_orders(1)[0]
         resp = self.app.post(
@@ -261,8 +261,33 @@ class TestOrderService(TestCase):
         updated_order = resp.get_json()
         self.assertEqual(updated_order["customer_id"], 100)
 
-    def test_update_order_raise_errors(self):
-        """ Update existing Orders that raise errors"""
+    def test_update_order_with_order_items(self):
+        """ Update an existing Order with valid order_items"""
+        # create an order to update
+        test_order = self._create_orders(1)[0]
+        resp = self.app.post(
+            "/orders", json=test_order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # update the order
+        new_order = resp.get_json()
+        new_order_item = new_order["order_items"][0]
+        new_order_item["price"] = 99.99
+        new_order_item["status"] = "CANCELLED"
+        resp = self.app.put(
+            "/orders/{}".format(new_order["id"]),
+            json=new_order,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        updated_order_item = updated_order["order_items"][0]
+        self.assertEqual(updated_order_item["status"], "CANCELLED")
+        self.assertEqual(updated_order_item["price"], 99.99)
+
+    def test_update_order_with_wrong_customer_id_format(self):
+        """ Update an existing Order with wrong customer_id format"""
         # create an order to update
         test_order = self._create_orders(1)[0]
         resp = self.app.post(
@@ -274,13 +299,24 @@ class TestOrderService(TestCase):
 
         # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Customer id should be an integer
-        new_order["customer_id"] = "100"
+        new_order["customer_id"] = "abc"
         resp = self.app.put(
             "/orders/{}".format(new_order["id"]),
             json=new_order,
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_order_with_empty_customer_id(self):
+        """ Update existing Orders with empty cutomer_id"""
+        # create an order to update
+        test_order = self._create_orders(1)[0]
+        resp = self.app.post(
+            "/orders", json=test_order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # update the order
+        new_order = resp.get_json()
 
         # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Customer id can't be empty
@@ -291,6 +327,17 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_order_with_empty_orderitems(self):
+        """ Update existing Orders with empty order items"""
+        # create an order to update
+        test_order = self._create_orders(1)[0]
+        resp = self.app.post(
+            "/orders", json=test_order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # update the order
+        new_order = resp.get_json()
 
         # intend to raise a DataValidationError and get 400_BAD_REQUEST
         # Order Items can't be empty
