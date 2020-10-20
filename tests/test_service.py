@@ -5,11 +5,11 @@ Test cases can be run with the following:
   coverage report -m
 """
 from unittest import TestCase
+from unittest.mock import patch
 import os
 import logging
 from flask_api import status
 from flask import abort
-from unittest.mock import patch
 from service.models import DataValidationError, db
 from service import app
 from service.service import init_db
@@ -22,7 +22,7 @@ DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost
 
 def _get_order_factory_with_items(count):
     items = []
-    for i in range(count):
+    for _ in range(count):
         items.append(OrderItemFactory())
     return OrderFactory(items=items)
 
@@ -45,7 +45,6 @@ class TestOrderService(TestCase):
     @classmethod
     def tearDownClass(cls):
         """ Run once after all tests """
-        pass
 
     def setUp(self):
         """ Runs before each test """
@@ -72,8 +71,8 @@ class TestOrderService(TestCase):
             new_order = resp.get_json()
             test_order.id = new_order["id"]
             order_items = new_order["order_items"]
-            for i in range(len(order_items)):
-                test_order.order_items[i].item_id = order_items[i]["item_id"]
+            for i, item in enumerate(order_items):
+                test_order.order_items[i].item_id = item["item_id"]
             orders.append(test_order)
         return orders
 
@@ -100,7 +99,7 @@ class TestOrderService(TestCase):
                              json=_get_order_factory_with_items(1).serialize(),
                              content_type='application/xml')
 
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, 'Could not create order')
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_create_orders_customer_id_missing(self):
         """ Create an order missing customer_id """
@@ -110,7 +109,7 @@ class TestOrderService(TestCase):
                              json=order_factory.serialize(),
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_orders_customer_id_wrong_type(self):
         """ Create an order with invalid customer_id """
@@ -119,7 +118,7 @@ class TestOrderService(TestCase):
         resp = self.app.post('/orders',
                              json=order_factory.serialize(),
                              content_type='application/json')
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_orders_order_items_missing(self):
         """ Create an order missing order_items """
@@ -127,7 +126,7 @@ class TestOrderService(TestCase):
                              json=_get_order_factory_with_items(0).serialize(),
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_orders_missing_product(self):
         """ Create an order missing product in order_items """
@@ -137,7 +136,7 @@ class TestOrderService(TestCase):
                              json=order_factory.serialize(),
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_orders_missing_quantity(self):
         """ Create an order missing quantity in order_items """
@@ -147,7 +146,7 @@ class TestOrderService(TestCase):
                              json=order_factory.serialize(),
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_orders_missing_price(self):
         """ Create an order missing price of order_items """
@@ -157,7 +156,7 @@ class TestOrderService(TestCase):
                              json=order_factory.serialize(),
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_orders_missing_status(self):
         """ Create an order missing status of order_items """
@@ -167,7 +166,7 @@ class TestOrderService(TestCase):
                              json=order_factory.serialize(),
                              content_type='application/json')
 
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_order(self):
         """ Delete an Order """
@@ -323,7 +322,8 @@ class TestOrderService(TestCase):
         test_order = self._create_orders(1)[0]
         item_id = test_order.order_items[0].item_id
         order_item = OrderItemFactory()
-        resp = self.app.put('/orders/{}/items/{}'.format(test_order.id, item_id), json= order_item.serialize(),
+        resp = self.app.put('/orders/{}/items/{}'.format(test_order.id, item_id),
+                            json=order_item.serialize(),
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_item = resp.get_json()["order_items"][0]
@@ -334,7 +334,7 @@ class TestOrderService(TestCase):
 
     def test_update_order_item_order_not_exists(self):
         """ Update an existing Order Item when order is not present"""
-        resp = self.app.put('/orders/{}/items/{}'.format(0,0), json= "",
+        resp = self.app.put('/orders/{}/items/{}'.format(0, 0), json="",
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -344,9 +344,11 @@ class TestOrderService(TestCase):
         test_order = self._create_orders(1)[0]
         item_id = test_order.order_items[0].item_id + 1
         order_item = OrderItemFactory()
-        resp = self.app.put('/orders/{}/items/{}'.format(test_order.id, item_id), json= order_item.serialize(),
+        resp = self.app.put('/orders/{}/items/{}'.format(test_order.id, item_id),
+                            json=order_item.serialize(),
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def _create_new_order(self, order_factory):
         resp = self.app.post('/orders',
                              json=order_factory.serialize(),

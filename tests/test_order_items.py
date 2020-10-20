@@ -1,8 +1,7 @@
+""" Module for Order Item tests """
 import unittest
-from datetime import datetime
 import os
-from service.models import OrderItem, DataValidationError, db
-from service import app
+from service.models import OrderItem, DataValidationError
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb")
 
@@ -29,7 +28,8 @@ class TestOrderItems(unittest.TestCase):
 
     def test_repr(self):
         """ Create an order item and test it's repr """
-        order_item = OrderItem(item_id=1, product="product", quantity=1, price=5, status="PLACED", order_id=1)
+        order_item = OrderItem(item_id=1, product="product", quantity=1,
+                               price=5, status="PLACED", order_id=1)
         self.assertEqual(order_item.__repr__(), "<OrderItem 1>")
 
     def test_repr_with_no_item_id(self):

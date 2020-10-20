@@ -1,6 +1,9 @@
+"""
+Module to define the models for the orders resource.
+"""
 import logging
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 # Create the SQLAlchemy object to be initialized later in init_db()
 db = SQLAlchemy()
@@ -8,10 +11,10 @@ db = SQLAlchemy()
 
 class DataValidationError(Exception):
     """ Used for an data validation errors when deserializing """
-    pass
 
 
 class OrderItem(db.Model):
+    """ Class that represents an Order Item """
     app = None
 
     ##################################################
@@ -57,7 +60,8 @@ class OrderItem(db.Model):
                 raise DataValidationError("Invalid order: invalid product")
             if self.quantity is None or not isinstance(self.quantity, int):
                 raise DataValidationError("Invalid order: invalid quantity")
-            if self.price is None or (not isinstance(self.price, float) and not isinstance(self.price, int)):
+            if self.price is None or \
+                    (not isinstance(self.price, float) and not isinstance(self.price, int)):
                 raise DataValidationError("Invalid order: invalid price")
             if self.status is None or not isinstance(self.status, str):
                 raise DataValidationError("Invalid order: invalid status")
@@ -73,9 +77,7 @@ class OrderItem(db.Model):
 
 
 class Order(db.Model):
-    """
-    Class that represents an Order
-    """
+    """ Class that represents an Order """
     logger = logging.getLogger(__name__)
     app = None
 
@@ -148,9 +150,9 @@ class Order(db.Model):
             items = data["order_items"]
             if items is None or len(items) == 0:
                 raise DataValidationError("Order items can't be empty")
-            for i in range(len(items)):
+            for data_item in items:
                 item = OrderItem()
-                item.deserialize(items[i])
+                item.deserialize(data_item)
                 self.order_items.append(item)
         except KeyError as error:
             raise DataValidationError("Invalid order: missing " + error.args[0])

@@ -1,3 +1,6 @@
+"""
+Module that initiliazes the flask application
+"""
 import logging
 from flask import Flask
 

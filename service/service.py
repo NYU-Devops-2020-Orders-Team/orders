@@ -1,3 +1,4 @@
+""" Module to define the Rest APIs """
 from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from werkzeug.exceptions import NotFound
@@ -148,7 +149,8 @@ def get_orders(order_id):
 @app.route("/orders/<int:order_id>", methods=["PUT"])
 def update_orders(order_id):
     """
-    Update an Order's customer_id, since customer_id is the only field in the Order table that can be updated
+    Update an Order's customer_id
+    Since customer_id is the only field in the Order table that can be updated
     This endpoint will update an Order based the body that is posted
     """
     app.logger.info("Request to update order with id: %s", order_id)
@@ -199,6 +201,7 @@ def update_order_items(order_id, item_id):
 
 
 def get_customer_id_from_request(json):
+    """ Helper function to get customer_id from the request """
     try:
         new_customer_id = json["customer_id"]
         if new_customer_id is None or not isinstance(new_customer_id, int):
@@ -265,8 +268,8 @@ def cancel_item(order_id, item_id):
         if order.order_items[i].item_id == item_id:
             order_item_found = True
             if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
-                raise DataValidationError("Item has already been shipped/delivered. Nothing to cancel")
-            elif order.order_items[i].status != "CANCELLED":
+                raise DataValidationError("Item has already been shipped/delivered")
+            if order.order_items[i].status != "CANCELLED":
                 order.order_items[i].status = "CANCELLED"
             break
 
