@@ -2,7 +2,7 @@ from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from werkzeug.exceptions import NotFound
 
-from .models import Order, DataValidationError
+from .models import Order, OrderItem, DataValidationError
 from . import app
 
 
@@ -140,6 +140,90 @@ def get_orders(order_id):
     if not order:
         raise NotFound("Order with id '{}' was not found.".format(order_id))
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# UPDATE AN EXISTING ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_orders(order_id):
+    """
+    Update an Order's customer_id, since customer_id is the only field in the Order table that can be updated
+    This endpoint will update an Order based the body that is posted
+    """
+    app.logger.info("Request to update order with id: %s", order_id)
+    check_content_type("application/json")
+    new_customer_id = get_customer_id_from_request(request.get_json())
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    order.customer_id = new_customer_id
+    order.update()
+
+    app.logger.info("Order with ID [%s] updated.", order_id)
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# UPDATE AN EXISTING ORDER ITEM
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
+def update_order_items(order_id, item_id):
+    """
+    Update an Order Item
+    This endpoint will update an Order item based the body that is posted
+    """
+    app.logger.info("Request to update order with id: %s", order_id)
+    check_content_type("application/json")
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    order_item_found = False
+
+    new_order_item = OrderItem()
+    new_order_item.deserialize(request.get_json())
+    for i in range(len(order.order_items)):
+        if order.order_items[i].item_id == item_id:
+            order_item_found = True
+            order.order_items[i].product = new_order_item.product
+            order.order_items[i].quantity = new_order_item.quantity
+            order.order_items[i].price = new_order_item.price
+            order.order_items[i].status = new_order_item.status
+            break
+
+    if not order_item_found:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    order.update()
+    app.logger.info("Order with ID [%s] updated.", order_id)
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+def get_customer_id_from_request(json):
+    try:
+        new_customer_id = json["customer_id"]
+        if new_customer_id is None or not isinstance(new_customer_id, int):
+            raise DataValidationError("Invalid Customer Id provided for update")
+        return new_customer_id
+    except KeyError as error:
+        raise DataValidationError("Invalid order: missing " + error.args[0])
+
+
+######################################################################
+# DELETE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_orders(order_id):
+    """
+    Delete an Order
+    This endpoint will delete an Order based the id specified in the path
+    """
+    app.logger.info("Request to delete order with id: %s", order_id)
+    order = Order.find(order_id)
+    if order:
+        order.delete()
+
+    app.logger.info("Order with ID [%s] delete complete.", order_id)
+    return make_response("", status.HTTP_204_NO_CONTENT)
 
 
 ######################################################################

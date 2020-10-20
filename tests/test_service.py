@@ -62,7 +62,7 @@ class TestOrderService(TestCase):
         """ Factory method to create orders in bulk """
         orders = []
         for _ in range(count):
-            test_order = _get_order_factory_with_items(count=3)
+            test_order = _get_order_factory_with_items(count=1)
             resp = self.app.post(
                 "/orders", json=test_order.serialize(), content_type="application/json"
             )
@@ -169,6 +169,33 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
+    def test_delete_order(self):
+        """ Delete an Order """
+        test_order = self._create_orders(1)[0]
+        resp = self.app.delete(
+            "/orders/{}".format(test_order.id), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure order is deleted
+        resp = self.app.get(
+            "/orders/{}".format(test_order.id), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_order_already_deleted(self):
+        """ Attempt to Delete an Order which does not exist in DB """
+        resp = self.app.delete(
+            "/orders/{}".format(999), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure order is deleted
+        resp = self.app.get(
+            "/orders/{}".format(999), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_get_order_list_empty_list(self):
         """ Get a list of Orders when no orders present in database """
         resp = self.app.get("/orders")
@@ -256,6 +283,70 @@ class TestOrderService(TestCase):
         resp = self.app.get('/orders/500Error')
         self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def test_update_order(self):
+        """ Update an existing Order """
+        # create an order to update
+        test_order = self._create_orders(5)[0]
+
+        resp = self.app.put('/orders/{}'.format(test_order.id), json={'customer_id': 123},
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.get_json()["customer_id"], 123)
+
+    def test_update_order_not_exists(self):
+        """ Update an existing Order when the order does not exist """
+        resp = self.app.put('/orders/{}'.format(0), json={'customer_id': 123},
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_order_not_exists(self):
+        """ Update an existing Order when the order does not exist """
+        resp = self.app.put('/orders/{}'.format(0), json={'customer_id': 123},
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_customer_id_missing(self):
+        """ Update an existing Order when customer_id is missing in request """
+        resp = self.app.put('/orders/{}'.format(0), json={},
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_order_customer_id_none(self):
+        """ Update an existing Order when customer_id is missing in request """
+        resp = self.app.put('/orders/{}'.format(0), json={'customer_id': None},
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_order_item(self):
+        """ Update an existing Order Item """
+        # create an order to update
+        test_order = self._create_orders(1)[0]
+        item_id = test_order.order_items[0].item_id
+        order_item = OrderItemFactory()
+        resp = self.app.put('/orders/{}/items/{}'.format(test_order.id, item_id), json= order_item.serialize(),
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_item = resp.get_json()["order_items"][0]
+        self.assertEqual(new_item["product"], order_item.product)
+        self.assertEqual(new_item["quantity"], order_item.quantity)
+        self.assertEqual(new_item["price"], order_item.price)
+        self.assertEqual(new_item["status"], order_item.status)
+
+    def test_update_order_item_order_not_exists(self):
+        """ Update an existing Order Item when order is not present"""
+        resp = self.app.put('/orders/{}/items/{}'.format(0,0), json= "",
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_item_not_exists(self):
+        """ Update an existing Order Item when order item is not present """
+        # create an order to update
+        test_order = self._create_orders(1)[0]
+        item_id = test_order.order_items[0].item_id + 1
+        order_item = OrderItemFactory()
+        resp = self.app.put('/orders/{}/items/{}'.format(test_order.id, item_id), json= order_item.serialize(),
+                            content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
     def _create_new_order(self, order_factory):
         resp = self.app.post('/orders',
                              json=order_factory.serialize(),
