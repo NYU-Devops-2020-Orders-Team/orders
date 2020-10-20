@@ -22,7 +22,6 @@ class TestOrders(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """ These run once after Test suite """
         pass
 
     def setUp(self):
@@ -99,8 +98,50 @@ class TestOrders(unittest.TestCase):
         order = Order(customer_id=123, order_items=order_items)
         self.assertRaises(DataValidationError, order.create)
 
+    def test_update_an_order(self):
+        """ Update an existing Order """
+        order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
+        order_items = [order_item1]
+        order = Order(customer_id=111, order_items=order_items)
+        order.create()
+        self.assertTrue(order.id is not None)
+
+        order.customer_id = 234
+        order.update()
+
+        new_order = Order.find(order.id)
+        self.assertEqual(new_order.id, order.id)
+        self.assertEqual(new_order.customer_id, 234)
+
+    def test_update_an_order_not_exists(self):
+        """ Update a non-existing Order """
+        order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
+        order_items = [order_item1]
+        order = Order(id = 1234567, customer_id=111, order_items=order_items)
+        order.update()
+        self.assertRaises(DataValidationError)
+
+    def test_update_order_with_no_id(self):
+        """ Update an order with no id """
+        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_items = [order_item]
+        order = Order(customer_id=123, order_items=order_items)
+        self.assertRaises(DataValidationError, order.update)
+
+    def test_update_order_with_no_customer_id(self):
+        """ Update an order with no customer id """
+        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_items = [order_item]
+        order = Order(id=1, order_items=order_items)
+        self.assertRaises(DataValidationError, order.update)
+
+    def test_update_order_with_no_order_items(self):
+        """ Update an order with no order items"""
+        order = Order(id=1, customer_id=123)
+        self.assertRaises(DataValidationError, order.update)
+
     def test_serialize_an_order(self):
-        """ Test serialization of an Order """
+        """ Serialization of an Order """
         date = datetime.now
         order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
         order_item2 = OrderItem(product="product2", quantity=1, price=5, status="PLACED")
@@ -118,7 +159,7 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(data["order_items"], [order_item.serialize(), order_item2.serialize()])
 
     def test_deserialize_an_order(self):
-        """ Test deserialization of an Order """
+        """ Deserialization of an Order """
         data = {"customer_id": 123,
                 "order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
         order = Order()
@@ -132,13 +173,13 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order.order_items[0].product, "product")
 
     def test_deserialize_bad_data(self):
-        """ Test deserialization of bad data """
+        """ Deserialization of bad data """
         data = "this is not a dictionary"
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
 
     def test_deserialize_bad_data_with_keys_missing(self):
-        """ Test deserialization of bad order data with few keys missing """
+        """ Deserialization of bad order data with few keys missing """
         data = {"order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
@@ -154,12 +195,21 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order.customer_id, 111)
         self.assertEqual(len(order.order_items), 1)
         self.assertEqual(order.order_items[0].product, "product1")
-    
+
     def test_find_invalid_order(self):
         """ Find an Order by an invalid ID """
         order = Order.find(0)
         self.assertEqual(order, None)
 
+    def test_delete_an_order(self):
+        """ Delete an Order """
+        order_items1 = [OrderItem(product="product1", quantity=1, price=5.0, status="PLACED")]
+        order = Order(customer_id=111, order_items=order_items1)
+        order.create()
+        self.assertEqual(len(Order.all()), 1)
+        # delete the order and make sure it isn't in the database
+        order.delete()
+        self.assertEqual(len(Order.all()), 0)
 
 ######################################################################
 #   M A I N

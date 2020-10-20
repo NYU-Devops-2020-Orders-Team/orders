@@ -53,13 +53,13 @@ class OrderItem(db.Model):
             self.price = data["price"]
             self.status = data["status"]
 
-            if self.product is None or type(self.product) is not str:
+            if self.product is None or not isinstance(self.product, str):
                 raise DataValidationError("Invalid order: invalid product")
-            if self.quantity is None or type(self.quantity) is not int:
+            if self.quantity is None or not isinstance(self.quantity, int):
                 raise DataValidationError("Invalid order: invalid quantity")
-            if self.price is None or (type(self.price) is not float and type(self.price) is not int):
+            if self.price is None or (not isinstance(self.price, float) and not isinstance(self.price, int)):
                 raise DataValidationError("Invalid order: invalid price")
-            if self.status is None or type(self.status) is not str:
+            if self.status is None or not isinstance(self.status, str):
                 raise DataValidationError("Invalid order: invalid status")
             if self.status not in ['PLACED', 'SHIPPED', 'DELIVERED', 'CANCELLED']:
                 raise DataValidationError("Invalid order: status not in list")
@@ -85,7 +85,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, nullable=False)
     created_date = db.Column(db.DateTime(), default=datetime.now)
-    order_items = db.relationship('OrderItem', backref='order')
+    order_items = db.relationship('OrderItem', backref='order', cascade="all, delete", lazy=True)
 
     def __repr__(self):
         return "<Order %r>" % self.id
@@ -101,6 +101,25 @@ class Order(db.Model):
             raise DataValidationError("Order Items can't be empty")
 
         db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        """
+        Updates an Order to the database
+        """
+        if not self.id or not isinstance(self.id, int):
+            raise DataValidationError("Update called with invalid id field")
+        if self.customer_id is None or not isinstance(self.customer_id, int):
+            raise DataValidationError("Customer id is not valid")
+        if len(self.order_items) == 0:
+            raise DataValidationError("Order Items can't be empty")
+        db.session.commit()
+
+    def delete(self):
+        """
+        Removes an Order from the data store
+        """
+        db.session.delete(self)
         db.session.commit()
 
     def serialize(self):
@@ -123,10 +142,12 @@ class Order(db.Model):
         try:
             self.customer_id = data["customer_id"]
             # check if customer_id is integer
-            if self.customer_id is None or type(self.customer_id) is not int:
+            if self.customer_id is None or not isinstance(self.customer_id, int):
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
+            if items is None or len(items) == 0:
+                raise DataValidationError("Order items can't be empty")
             for i in range(len(items)):
                 item = OrderItem()
                 item.deserialize(items[i])
@@ -134,7 +155,6 @@ class Order(db.Model):
         except KeyError as error:
             raise DataValidationError("Invalid order: missing " + error.args[0])
         except TypeError as error:
-            print(error)
             raise DataValidationError(
                 "Invalid order: body of request contained bad or no data"
             )
@@ -145,7 +165,6 @@ class Order(db.Model):
         """Initializes the database session
 
         :param app: the Flask app
-        :type data: Flask
 
         """
         cls.logger.info("Initializing database")

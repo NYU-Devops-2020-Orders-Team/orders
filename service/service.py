@@ -1,20 +1,8 @@
-from flask import Flask
-from flask_api import status  # HTTP Status Codes
-
-# Import Flask application
-from . import __init__
-
-import os
-import sys
-import logging
-from flask import Flask, jsonify, request, url_for, make_response, abort
+from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from werkzeug.exceptions import NotFound
 
-# For this example we'll use SQLAlchemy, a popular ORM that supports a
-# variety of backends including SQLite, MySQL, and PostgreSQL
-from flask_sqlalchemy import SQLAlchemy
-from .models import Order, DataValidationError
+from .models import Order, OrderItem, DataValidationError
 from . import app
 
 
@@ -39,6 +27,7 @@ def bad_request(error):
         status.HTTP_400_BAD_REQUEST,
     )
 
+
 @app.errorhandler(status.HTTP_404_NOT_FOUND)
 def not_found(error):
     """ Handles resources not found with 404_NOT_FOUND """
@@ -49,6 +38,7 @@ def not_found(error):
         ),
         status.HTTP_404_NOT_FOUND,
     )
+
 
 @app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
 def method_not_supported(error):
@@ -95,6 +85,7 @@ def index():
         status.HTTP_200_OK,
     )
 
+
 ######################################################################
 # ADD A NEW ORDER
 ######################################################################
@@ -110,11 +101,9 @@ def create_orders():
     order.deserialize(request.get_json())
     order.create()
     message = order.serialize()
-
-    # location_url = url_for("get_orders", pet_id=order.id, _external=True)
-
+    location_url = url_for('get_orders', order_id=order.id, _external=True)
     app.logger.info('Created Order with id: {}'.format(order.id))
-    return make_response(jsonify(message), status.HTTP_201_CREATED)
+    return make_response(jsonify(message), status.HTTP_201_CREATED, {"Location": location_url})
 
 
 ######################################################################
@@ -135,6 +124,7 @@ def list_orders():
     app.logger.info("Returning %d orders", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
+
 ######################################################################
 # RETRIEVE AN ORDER
 ######################################################################
@@ -150,6 +140,141 @@ def get_orders(order_id):
     if not order:
         raise NotFound("Order with id '{}' was not found.".format(order_id))
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# UPDATE AN EXISTING ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_orders(order_id):
+    """
+    Update an Order's customer_id, since customer_id is the only field in the Order table that can be updated
+    This endpoint will update an Order based the body that is posted
+    """
+    app.logger.info("Request to update order with id: %s", order_id)
+    check_content_type("application/json")
+    new_customer_id = get_customer_id_from_request(request.get_json())
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    order.customer_id = new_customer_id
+    order.update()
+
+    app.logger.info("Order with ID [%s] updated.", order_id)
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# UPDATE AN EXISTING ORDER ITEM
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
+def update_order_items(order_id, item_id):
+    """
+    Update an Order Item
+    This endpoint will update an Order item based the body that is posted
+    """
+    app.logger.info("Request to update order with id: %s", order_id)
+    check_content_type("application/json")
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    order_item_found = False
+
+    new_order_item = OrderItem()
+    new_order_item.deserialize(request.get_json())
+    for i in range(len(order.order_items)):
+        if order.order_items[i].item_id == item_id:
+            order_item_found = True
+            order.order_items[i].product = new_order_item.product
+            order.order_items[i].quantity = new_order_item.quantity
+            order.order_items[i].price = new_order_item.price
+            order.order_items[i].status = new_order_item.status
+            break
+
+    if not order_item_found:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    order.update()
+    app.logger.info("Order with ID [%s] updated.", order_id)
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+def get_customer_id_from_request(json):
+    try:
+        new_customer_id = json["customer_id"]
+        if new_customer_id is None or not isinstance(new_customer_id, int):
+            raise DataValidationError("Invalid Customer Id provided for update")
+        return new_customer_id
+    except KeyError as error:
+        raise DataValidationError("Invalid order: missing " + error.args[0])
+
+
+######################################################################
+# DELETE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_orders(order_id):
+    """
+    Delete an Order
+    This endpoint will delete an Order based the id specified in the path
+    """
+    app.logger.info("Request to delete order with id: %s", order_id)
+    order = Order.find(order_id)
+    if order:
+        order.delete()
+
+    app.logger.info("Order with ID [%s] delete complete.", order_id)
+    return make_response("", status.HTTP_204_NO_CONTENT)
+
+
+######################################################################
+# CANCEL AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+def cancel_orders(order_id):
+    """ Cancel all the items of the Order that have not being shipped yet """
+    app.logger.info("Request to cancel order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    shipped_or_delivered_orders = 0
+    for i in range(len(order.order_items)):
+        if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
+            shipped_or_delivered_orders += 1
+        elif order.order_items[i].status != "CANCELLED":
+            order.order_items[i].status = "CANCELLED"
+    if shipped_or_delivered_orders == len(order.order_items):
+        raise DataValidationError("All the items have been shipped. Nothing to cancel")
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# CANCEL AN ITEM IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>/cancel", methods=["PUT"])
+def cancel_item(order_id, item_id):
+    """ Cancel a single item in the Order that have not being shipped yet """
+    app.logger.info("Request to cancel item with id: %s in order with id: %s", item_id, order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    order_item_found = False
+    for i in range(len(order.order_items)):
+        if order.order_items[i].item_id == item_id:
+            order_item_found = True
+            if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
+                raise DataValidationError("Item has already been shipped/delivered. Nothing to cancel")
+            elif order.order_items[i].status != "CANCELLED":
+                order.order_items[i].status = "CANCELLED"
+            break
+
+    if not order_item_found:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
 
 if __name__ == '__main__':
     app.run()
