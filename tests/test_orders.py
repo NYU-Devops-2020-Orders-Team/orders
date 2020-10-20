@@ -202,6 +202,15 @@ class TestOrders(unittest.TestCase):
         order = Order.find(0)
         self.assertEqual(order, None)
 
+    def test_delete_an_order(self):
+        """ Delete an Order """
+        order_items1 = [OrderItem(product="product1", quantity=1, price=5.0, status="PLACED")]
+        order = Order(customer_id=111, order_items=order_items1)
+        order.create()
+        self.assertEqual(len(Order.all()), 1)
+        # delete the order and make sure it isn't in the database
+        order.delete()
+        self.assertEqual(len(Order.all()), 0)
 
 ######################################################################
 #   M A I N

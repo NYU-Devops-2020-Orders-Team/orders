@@ -85,7 +85,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, nullable=False)
     created_date = db.Column(db.DateTime(), default=datetime.now)
-    order_items = db.relationship('OrderItem', backref='order')
+    order_items = db.relationship('OrderItem', backref='order', cascade="all, delete", lazy=True)
 
     def __repr__(self):
         return "<Order %r>" % self.id
@@ -113,6 +113,13 @@ class Order(db.Model):
             raise DataValidationError("Customer id is not valid")
         if len(self.order_items) == 0:
             raise DataValidationError("Order Items can't be empty")
+        db.session.commit()
+
+    def delete(self):
+        """
+        Removes an Order from the data store
+        """
+        db.session.delete(self)
         db.session.commit()
 
     def serialize(self):
