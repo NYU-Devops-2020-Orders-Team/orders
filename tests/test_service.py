@@ -171,6 +171,33 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, 'Could not identify bad request')
 
+    def test_delete_order(self):
+        """ Delete an Order """
+        test_order = self._create_orders(1)[0]
+        resp = self.app.delete(
+            "/orders/{}".format(test_order.id), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure order is deleted
+        resp = self.app.get(
+            "/orders/{}".format(test_order.id), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_order_already_deleted(self):
+        """ Attempt to Delete an Order which does not exist in DB """
+        resp = self.app.delete(
+            "/orders/{}".format(999), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure order is deleted
+        resp = self.app.get(
+            "/orders/{}".format(999), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_get_order_list_empty_list(self):
         """ Get a list of Orders when no orders present in database """
         resp = self.app.get("/orders")
