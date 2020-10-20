@@ -1,3 +1,4 @@
+""" Module for Order tests """
 import unittest
 from datetime import datetime
 import os
@@ -117,7 +118,7 @@ class TestOrders(unittest.TestCase):
         """ Update a non-existing Order """
         order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
         order_items = [order_item1]
-        order = Order(id = 1234567, customer_id=111, order_items=order_items)
+        order = Order(id=1234567, customer_id=111, order_items=order_items)
         order.update()
         self.assertRaises(DataValidationError)
 
@@ -161,7 +162,12 @@ class TestOrders(unittest.TestCase):
     def test_deserialize_an_order(self):
         """ Deserialization of an Order """
         data = {"customer_id": 123,
-                "order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
+                "order_items": [
+                    {"product": "product",
+                     "quantity": 1,
+                     "price": 5,
+                     "status": "PLACED"}
+                ]}
         order = Order()
         order.deserialize(data)
         self.assertNotEqual(order, None)
@@ -180,7 +186,12 @@ class TestOrders(unittest.TestCase):
 
     def test_deserialize_bad_data_with_keys_missing(self):
         """ Deserialization of bad order data with few keys missing """
-        data = {"order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
+        data = {"order_items": [{
+            "product": "product",
+            "quantity": 1,
+            "price": 5,
+            "status": "PLACED"
+        }]}
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
 
@@ -210,6 +221,7 @@ class TestOrders(unittest.TestCase):
         # delete the order and make sure it isn't in the database
         order.delete()
         self.assertEqual(len(Order.all()), 0)
+
 
 ######################################################################
 #   M A I N
