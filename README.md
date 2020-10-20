@@ -20,13 +20,24 @@ Then, all you have to do is clone this repo and invoke vagrant:
     $ cd /vagrant
 ```
 
-## Running the Tests
+To run the Flask server, use
+```shell
+    $ FLASK_APP=service:app flask run -h 0.0.0.0
+```
+
+## Running the Tests and Pylint
 
 You can run the tests using `nose`
 
 ```shell
     $ nosetests
 ```
+
+Also, you can run Pylint as the following. Our current score is 9.87/10.
+```shell
+    $ pylint --rcfile=pylint.conf **/*.py
+```
+
 
 When you are done, you can exit and shut down the vm with:
 
