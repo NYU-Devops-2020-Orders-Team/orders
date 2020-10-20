@@ -1,19 +1,7 @@
-from flask import Flask
-from flask_api import status  # HTTP Status Codes
-
-# Import Flask application
-from . import __init__
-
-import os
-import sys
-import logging
-from flask import Flask, jsonify, request, url_for, make_response, abort
+from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from werkzeug.exceptions import NotFound
 
-# For this example we'll use SQLAlchemy, a popular ORM that supports a
-# variety of backends including SQLite, MySQL, and PostgreSQL
-from flask_sqlalchemy import SQLAlchemy
 from .models import Order, OrderItem, DataValidationError
 from . import app
 
@@ -113,11 +101,9 @@ def create_orders():
     order.deserialize(request.get_json())
     order.create()
     message = order.serialize()
-
-    # location_url = url_for("get_orders", order_id=order.id, _external=True)
-
+    location_url = url_for('get_orders', order_id=order.id, _external=True)
     app.logger.info('Created Order with id: {}'.format(order.id))
-    return make_response(jsonify(message), status.HTTP_201_CREATED)
+    return make_response(jsonify(message), status.HTTP_201_CREATED, {"Location": location_url})
 
 
 ######################################################################
@@ -238,6 +224,57 @@ def delete_orders(order_id):
 
     app.logger.info("Order with ID [%s] delete complete.", order_id)
     return make_response("", status.HTTP_204_NO_CONTENT)
+
+
+######################################################################
+# CANCEL AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+def cancel_orders(order_id):
+    """ Cancel all the items of the Order that have not being shipped yet """
+    app.logger.info("Request to cancel order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    shipped_or_delivered_orders = 0
+    for i in range(len(order.order_items)):
+        if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
+            shipped_or_delivered_orders += 1
+        elif order.order_items[i].status != "CANCELLED":
+            order.order_items[i].status = "CANCELLED"
+    if shipped_or_delivered_orders == len(order.order_items):
+        raise DataValidationError("All the items have been shipped. Nothing to cancel")
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# CANCEL AN ITEM IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>/cancel", methods=["PUT"])
+def cancel_item(order_id, item_id):
+    """ Cancel a single item in the Order that have not being shipped yet """
+    app.logger.info("Request to cancel item with id: %s in order with id: %s", item_id, order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    order_item_found = False
+    for i in range(len(order.order_items)):
+        if order.order_items[i].item_id == item_id:
+            order_item_found = True
+            if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
+                raise DataValidationError("Item has already been shipped/delivered. Nothing to cancel")
+            elif order.order_items[i].status != "CANCELLED":
+                order.order_items[i].status = "CANCELLED"
+            break
+
+    if not order_item_found:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
 
 if __name__ == '__main__':
     app.run()

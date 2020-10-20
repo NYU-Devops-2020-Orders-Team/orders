@@ -9,14 +9,16 @@ import random
 
 db = SQLAlchemy()
 
+
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         abstract = True
         sqlalchemy_session = db.session
 
+
 class OrderFactory(BaseFactory):
     """ Creates fake orders """
-    
+
     class Meta:
         model = Order
 
@@ -31,17 +33,20 @@ class OrderFactory(BaseFactory):
         if extracted:
             self.order_items = extracted
 
+
 class OrderItemFactory(BaseFactory):
     """ Creates fake order items """
+
     class Meta:
         model = OrderItem
-    
+
     item_id = factory.Sequence(lambda n: n)
     product = factory.Faker('sentence', nb_words=1, variable_nb_words=True)
     quantity = random.randint(0, 100000)
     price = random.uniform(0, 100000)
-    status = FuzzyChoice(choices=["PLACED", "SHIPPED", "DELIVERED", "CANCELLED"])
+    status = FuzzyChoice(choices=["PLACED"])
     order_id = factory.SubFactory(OrderFactory)
+
 
 if __name__ == "__main__":
     for _ in range(5):

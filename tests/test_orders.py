@@ -22,7 +22,6 @@ class TestOrders(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """ These run once after Test suite """
         pass
 
     def setUp(self):
@@ -142,7 +141,7 @@ class TestOrders(unittest.TestCase):
         self.assertRaises(DataValidationError, order.update)
 
     def test_serialize_an_order(self):
-        """ Test serialization of an Order """
+        """ Serialization of an Order """
         date = datetime.now
         order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
         order_item2 = OrderItem(product="product2", quantity=1, price=5, status="PLACED")
@@ -160,7 +159,7 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(data["order_items"], [order_item.serialize(), order_item2.serialize()])
 
     def test_deserialize_an_order(self):
-        """ Test deserialization of an Order """
+        """ Deserialization of an Order """
         data = {"customer_id": 123,
                 "order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
         order = Order()
@@ -174,13 +173,13 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order.order_items[0].product, "product")
 
     def test_deserialize_bad_data(self):
-        """ Test deserialization of bad data """
+        """ Deserialization of bad data """
         data = "this is not a dictionary"
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
 
     def test_deserialize_bad_data_with_keys_missing(self):
-        """ Test deserialization of bad order data with few keys missing """
+        """ Deserialization of bad order data with few keys missing """
         data = {"order_items": [{"product": "product", "quantity": 1, "price": 5, "status": "PLACED"}]}
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
