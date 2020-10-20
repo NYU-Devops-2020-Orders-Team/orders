@@ -100,26 +100,19 @@ class TestOrders(unittest.TestCase):
         self.assertRaises(DataValidationError, order.create)
 
     def test_update_an_order(self):
-        """ Update an esisting Order """
+        """ Update an existing Order """
         order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
         order_items = [order_item1]
-        order = Order(id=1, customer_id=111, order_items=order_items)
+        order = Order(customer_id=111, order_items=order_items)
         order.create()
-        self.assertEqual(order.id, 1)
-        self.assertEqual(len(order.order_items), 1)
-        # Change it an update it
-        order_item2 = OrderItem(product="p2", quantity=2, price=3, status="PLACED")
-        order.order_items.append(order_item2)
+        self.assertTrue(order.id is not None)
+
+        order.customer_id = 234
         order.update()
-        self.assertEqual(order.id, 1)
-        self.assertEqual(len(order.order_items), 2)
-        # Fetch it back and make sure the id hasn't changed
-        # but the data did change
-        orders = Order.all()
-        order = orders[0]
-        self.assertEqual(len(orders), 1)
-        self.assertEqual(order.id, 1)
-        self.assertEqual(len(order.order_items), 2)
+
+        new_order = Order.find(order.id)
+        self.assertEqual(new_order.id, order.id)
+        self.assertEqual(new_order.customer_id, 234)
 
     def test_update_an_order_not_exists(self):
         """ Update a non-existing Order """
