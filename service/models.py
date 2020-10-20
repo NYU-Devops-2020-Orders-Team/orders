@@ -142,7 +142,7 @@ class Order(db.Model):
         try:
             self.customer_id = data["customer_id"]
             # check if customer_id is integer
-            if self.customer_id is None or isinstance(self.customer_id, int) is False:
+            if self.customer_id is None or not isinstance(self.customer_id, int):
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
