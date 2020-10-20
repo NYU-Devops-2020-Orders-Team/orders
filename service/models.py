@@ -103,13 +103,25 @@ class Order(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def update(self):
+        """
+        Updates an Order to the database
+        """
+        if not self.id or not isinstance(self.id, int):
+            raise DataValidationError("Update called with invalid id field")
+        if self.customer_id is None or not isinstance(self.customer_id, int):
+            raise DataValidationError("Customer id is not valid")
+        if len(self.order_items) == 0:
+            raise DataValidationError("Order Items can't be empty")
+        db.session.commit()
+
     def delete(self):
         """
         Removes an Order from the data store
         """
         db.session.delete(self)
         db.session.commit()
-    
+
     def serialize(self):
         """ Serializes an order into a dictionary """
         return {
@@ -134,6 +146,8 @@ class Order(db.Model):
                 raise DataValidationError("Customer Id must be integer")
 
             items = data["order_items"]
+            if items is None or len(items) == 0:
+                raise DataValidationError("Order items can't be empty")
             for i in range(len(items)):
                 item = OrderItem()
                 item.deserialize(items[i])
