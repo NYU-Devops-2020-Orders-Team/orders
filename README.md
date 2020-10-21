@@ -66,6 +66,32 @@ If the VM is no longer needed you can remove it with:
 | cancel_orders  | PUT  |  /orders/<int:order_id>/cancel  |  Cancel all the items of the Order that have not being shipped yet
 | cancel_item | PUT  | /orders/<int:order_id>/items/<int:item_id>/cancel | Cancel a single item in the Order that have not being shipped yet
 
+## Model
+
+We've used PostgreSQL for persistence.
+
+####Order:
+
+|  Column  |  Type  | Constraints  |
+| :---------: | :---------: | :------------: | 
+| id | Integer | Primary Key |
+| customer_id | Integer | |
+| created_at | Datetime | |
+
+####Order Item:
+
+|  Column  |  Type  | Constraints  |
+| :----------: | :---------: | :------------: | 
+| item_id | Integer | Primary Key |
+| product | String | |
+| quantity | Integer | |
+| price | Float | |
+| status | String | |
+| order_id | Integer | Foreign Key |
+
+Status values: PLACED, SHIPPED, DELIVERED, CANCELLED
+
+
 ## Contents
 
 The project contains the following:
