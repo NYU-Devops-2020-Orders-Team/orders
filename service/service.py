@@ -263,18 +263,14 @@ def cancel_item(order_id, item_id):
     if not order:
         raise NotFound("Order with id '{}' was not found.".format(order_id))
 
-    order_item_found = False
-    for i in range(len(order.order_items)):
-        if order.order_items[i].item_id == item_id:
-            order_item_found = True
-            if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
-                raise DataValidationError("Item has already been shipped/delivered")
-            if order.order_items[i].status != "CANCELLED":
-                order.order_items[i].status = "CANCELLED"
-            break
-
-    if not order_item_found:
+    order_item = find_order_item(order.order_items, item_id)
+    if not order_item:
         raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    if order_item.status in ["DELIVERED", "SHIPPED"]: 
+        raise DataValidationError("Item has already been shipped/delivered")
+    if order_item.status != "CANCELLED":
+        order_item.status = "CANCELLED"
+ 
     order.update()
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
@@ -290,18 +286,14 @@ def ship_item(order_id, item_id):
     if not order:
         raise NotFound("Order with id '{}' was not found.".format(order_id))
 
-    order_item_found = False
-    for i in range(len(order.order_items)):
-        if order.order_items[i].item_id == item_id:
-            order_item_found = True
-            if order.order_items[i].status in ["CANCELLED", "DELIVERED"]:
-                raise DataValidationError("Item has already been cancelled/delivered")
-            if order.order_items[i].status != "SHIPPED":
-                order.order_items[i].status = "SHIPPED"
-            break
-
-    if not order_item_found:
+    order_item = find_order_item(order.order_items, item_id)
+    if not order_item:
         raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    if order_item.status in ["CANCELLED", "DELIVERED"]:
+        raise DataValidationError("Item has already been cancelled/delivered")
+    if order_item.status != "SHIPPED":
+        order_item.status = "SHIPPED"
+    
     order.update()
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
@@ -326,3 +318,9 @@ def check_content_type(content_type):
         return
     app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
     abort(415, "Content-Type must be {}".format(content_type))
+
+def find_order_item(order_items, item_id):
+    for i in range(len(order_items)):
+        if order_items[i].item_id == item_id:
+            return order_items[i]
+    return None
