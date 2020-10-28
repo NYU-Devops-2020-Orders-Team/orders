@@ -279,6 +279,33 @@ def cancel_item(order_id, item_id):
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
+######################################################################
+# SHIP AN ITEM IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>/ship", methods=["PUT"])
+def ship_item(order_id, item_id):
+    """ Ship a single item in the Order that have not being cancelled or delivered yet """
+    app.logger.info("Request to ship item with id: %s in order with id: %s", item_id, order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    order_item_found = False
+    for i in range(len(order.order_items)):
+        if order.order_items[i].item_id == item_id:
+            order_item_found = True
+            if order.order_items[i].status in ["CANCELLED", "DELIVERED"]:
+                raise DataValidationError("Item has already been cancelled/delivered")
+            if order.order_items[i].status != "SHIPPED":
+                order.order_items[i].status = "SHIPPED"
+            break
+
+    if not order_item_found:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
 if __name__ == '__main__':
     app.run()
 
