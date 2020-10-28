@@ -360,7 +360,7 @@ class TestOrderService(TestCase):
         """ Cancel an order """
         order = self._create_orders(1)[0]
         resp = self.app.put("/orders/{}/cancel".format(order.id))
-        self.assertEqual(resp.status_code, status.HTTP_200_OK, 'Could not cancel the order')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_cancel_order_not_found(self):
         """ Cancel an order when order does not exist"""
@@ -393,7 +393,7 @@ class TestOrderService(TestCase):
         order = self._create_orders(1)[0]
         item_id = order.order_items[0].item_id
         resp = self.app.put("/orders/{}/items/{}/cancel".format(order.id, item_id))
-        self.assertEqual(resp.status_code, status.HTTP_200_OK, 'Could not cancel the order')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_cancel_order_item_order_not_found(self):
         """ Cancel an order item when order does not exist"""
