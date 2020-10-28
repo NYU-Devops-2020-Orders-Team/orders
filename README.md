@@ -1,13 +1,13 @@
-# orders
+## orders - NYU Devops
+[![Build Status](https://travis-ci.com/NYU-Devops-2020-Orders-Team/orders.svg?branch=master)](https://travis-ci.com/NYU-Devops-2020-Orders-Team/orders)
+[![codecov](https://codecov.io/gh/NYU-Devops-2020-Orders-Team/orders/branch/master/graph/badge.svg?token=BOA9RMP3VE)](undefined)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-NYU DevOps project
-
-## Introduction
+### Introduction
 This project is the back end for an eCommerce web site as a RESTful microservice for the resource order. An order is a collection of order items created from products and quantity. This microservice supports the complete Create, Read, Update, & Delete (CRUD) lifecycle calls plus List, Query, and Cancel.
 
 
-## Setup
+### Setup
  The easiest way to run this project is with [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). If you don't have these softwares, download and install them first.
 
 Then, all you have to do is clone this repo and invoke vagrant:
@@ -25,7 +25,7 @@ To run the Flask server, use
     $ FLASK_APP=service:app flask run -h 0.0.0.0
 ```
 
-## Running the Tests and Pylint
+### Running the Tests and Pylint
 
 You can run the tests using `nose`
 
@@ -52,7 +52,7 @@ If the VM is no longer needed you can remove it with:
     $ vagrant destroy
 ```
 
-## What's featured in the project?
+### What's featured in the project?
 
 | Endpoint       |    Method  | Path          |                      Description
 |----------------|-------|-------------|     -------------------------
@@ -66,11 +66,11 @@ If the VM is no longer needed you can remove it with:
 | cancel_orders  | PUT  |  /orders/\<int:order_id>/cancel  |  Cancel all the items of the Order that have not being shipped yet
 | cancel_item | PUT  | /orders/\<int:order_id>/items/\<int:item_id>/cancel | Cancel a single item in the Order that have not being shipped yet
 | ship_item | PUT |  /orders/\<int:order_id>/items/\<int:item_id>/ship | Ship a single item in the Order that have not being cancelled or delivered yet
-## Model
+### Model
 
 We've used PostgreSQL for persistence.
 
-#### Order:
+### Order:
 
 |  Column  |  Type  | Constraints  |
 | :---------: | :---------: | :------------: | 
@@ -78,7 +78,7 @@ We've used PostgreSQL for persistence.
 | customer_id | Integer | |
 | created_at | Datetime | |
 
-#### Order Item:
+### Order Item:
 
 |  Column  |  Type  | Constraints  |
 | :----------: | :---------: | :------------: | 
@@ -92,7 +92,7 @@ We've used PostgreSQL for persistence.
 Status values: PLACED, SHIPPED, DELIVERED, CANCELLED
 
 
-## Contents
+### Contents
 
 The project contains the following:
 
@@ -123,5 +123,5 @@ requirements.txt        - file that lists if Python libraries required by your c
 setup.cfg               - configuration file for the behavior of the various setup commands
 ```
 
-## License
+### License
 [Apache-2.0](https://github.com/NYU-Devops-2020-Orders-Team/orders/blob/master/LICENSE)
