@@ -379,7 +379,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_cancel_order_with_some_shipped(self):
-        """ Cancel an order with all shipped/delivered items """
+        """ Cancel an order with some shipped/delivered items """
         order_factory = _get_order_factory_with_items(2)
         order_factory.order_items[0].status = "SHIPPED"
 
@@ -416,6 +416,39 @@ class TestOrderService(TestCase):
         new_item_id = new_order_json["order_items"][0]["item_id"]
         resp = self.app.put("/orders/{}/items/{}/cancel".format(new_order_id, new_item_id))
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_ship_order(self):
+        """ Ship an order """
+        order = self._create_orders(1)[0]
+        resp = self.app.put("/orders/{}/ship".format(order.id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_ship_order_not_found(self):
+        """ Ship an order when order does not exist"""
+        resp = self.app.put("/orders/{}/ship".format(0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_ship_order_with_all_delivered_canceled(self):
+        """ Ship an order with all delivered/canceled items """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "DELIVERED"
+        order_factory.order_items[1].status = "CANCELED"
+
+        new_order_id = self._create_new_order(order_factory)["id"]
+
+        resp = self.app.put("/orders/{}/ship".format(new_order_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_ship_order_with_some_delivered_canceled(self):
+        """ Ship an order with some shipped/delivered/canceled items """
+        order_factory = _get_order_factory_with_items(3)
+        order_factory.order_items[0].status = "DELIVERED"
+        order_factory.order_items[1].status = "CANCELED"
+
+        new_order_id = self._create_new_order(order_factory)["id"]
+
+        resp = self.app.put("/orders/{}/ship".format(new_order_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_ship_order_item(self):
         """ Ship an order item """
