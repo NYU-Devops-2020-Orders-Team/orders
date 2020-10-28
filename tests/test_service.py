@@ -329,7 +329,7 @@ class TestOrderService(TestCase):
         new_item = resp.get_json()["order_items"][0]
         self.assertEqual(new_item["product"], order_item.product)
         self.assertEqual(new_item["quantity"], order_item.quantity)
-        self.assertEqual(new_item["price"], order_item.price)
+        self.assertAlmostEqual(new_item["price"], order_item.price)
         self.assertEqual(new_item["status"], order_item.status)
 
     def test_update_order_item_order_not_exists(self):
