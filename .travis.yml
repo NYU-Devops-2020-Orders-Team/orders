@@ -2,7 +2,11 @@ language: python
 python:
   - "3.6"
 
+cache: pip
 install: "pip install -r requirements.txt"
+
+services:
+  - postgresql
 
 env:
   - DATABASE_URI=postgres://postgres:postgres@localhost:5432/testdb
@@ -15,6 +19,4 @@ script:
 
 after_success:
   - codecov
-
-services:
-  - postgresql
+  - pylint --rcfile=pylint.conf service

@@ -93,7 +93,6 @@ def index():
 @app.route('/orders', methods=['POST'])
 def create_orders():
     """
-    Creates an order
     This endpoint will create an order based the data in the body that is posted
     """
     app.logger.info("Request to create an order")
@@ -241,13 +240,13 @@ def cancel_orders(order_id):
         raise NotFound("Order with id '{}' was not found.".format(order_id))
 
     shipped_or_delivered_orders = 0
-    for i in range(len(order.order_items)):
-        if order.order_items[i].status in ["DELIVERED", "SHIPPED"]:
+    for order_item in order.order_items:
+        if order_item.status in ["DELIVERED", "SHIPPED"]:
             shipped_or_delivered_orders += 1
-        elif order.order_items[i].status != "CANCELLED":
-            order.order_items[i].status = "CANCELLED"
+        elif order_item.status != "CANCELLED":
+            order_item.status = "CANCELLED"
     if shipped_or_delivered_orders == len(order.order_items):
-        raise DataValidationError("All the items have been shipped. Nothing to cancel")
+        raise DataValidationError("All the items have been shipped/delivered. Nothing to cancel")
     order.update()
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
@@ -266,12 +265,12 @@ def cancel_item(order_id, item_id):
     order_item = find_order_item(order.order_items, item_id)
     if not order_item:
         raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-    if order_item.status in ["DELIVERED", "SHIPPED"]: 
+    if order_item.status in ["DELIVERED", "SHIPPED"]:
         raise DataValidationError("Item has already been shipped/delivered")
     if order_item.status != "CANCELLED":
         order_item.status = "CANCELLED"
- 
-    order.update()
+        order.update()
+
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
@@ -316,8 +315,8 @@ def ship_item(order_id, item_id):
         raise DataValidationError("Item has already been cancelled/delivered")
     if order_item.status != "SHIPPED":
         order_item.status = "SHIPPED"
-    
-    order.update()
+        order.update()
+
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
@@ -342,8 +341,10 @@ def check_content_type(content_type):
     app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
     abort(415, "Content-Type must be {}".format(content_type))
 
+
 def find_order_item(order_items, item_id):
-    for i in range(len(order_items)):
-        if order_items[i].item_id == item_id:
-            return order_items[i]
+    """ Find order item with the item_id """
+    for order_item in order_items:
+        if order_item.item_id == item_id:
+            return order_item
     return None
