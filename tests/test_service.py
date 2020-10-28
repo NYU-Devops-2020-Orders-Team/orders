@@ -416,3 +416,43 @@ class TestOrderService(TestCase):
         new_item_id = new_order_json["order_items"][0]["item_id"]
         resp = self.app.put("/orders/{}/items/{}/cancel".format(new_order_id, new_item_id))
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_ship_order_item(self):
+        """ Ship an order item """
+        order = self._create_orders(1)[0]
+        item_id = order.order_items[0].item_id
+        resp = self.app.put("/orders/{}/items/{}/ship".format(order.id, item_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_ship_order_item_order_not_found(self):
+        """ Ship an order item when order does not exist"""
+        resp = self.app.put("/orders/{}/items/{}/ship".format(0, 0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_ship_order_item_not_found(self):
+        """ Ship an order item when order item does not exist"""
+        order = self._create_orders(1)[0]
+        resp = self.app.put("/orders/{}/items/{}/ship".format(order.id, 0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_ship_order_item_with_cancelled(self):
+        """ Ship an order item with cancelled status """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "CANCELLED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/ship".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_ship_order_item_with_delivered(self):
+        """ Ship an order item with delivered status """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "DELIVERED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/ship".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

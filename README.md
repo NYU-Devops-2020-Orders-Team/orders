@@ -54,23 +54,23 @@ If the VM is no longer needed you can remove it with:
 
 ## What's featured in the project?
 
-| Endpoint       |    Method  | Rule          |                      Description
+| Endpoint       |    Method  | Path          |                      Description
 |----------------|-------|-------------|     -------------------------
 | index        |      GET    |  /          |                  
 | create_orders | POST   |   /orders  |  Create an order based the data in the body that is posted  
 | list_orders   |  GET     |  /orders            |             Return all of the Orders
-| get_orders    | GET    |  /orders/<int:order_id>       |   Retrieve a single Order
-|update_orders | PUT     | /orders/<int:order_id>      |   update an Order based the body that is posted
-| update_order_items  | PUT | /orders/<int:order_id>/items/<int:item_id>  | Update an Order item based the body that is posted
-| delete_orders   |   DELETE | /orders/<int:order_id>   |    Delete an Order based the id specified in the path
-| cancel_orders  | PUT  |  /orders/<int:order_id>/cancel  |  Cancel all the items of the Order that have not being shipped yet
-| cancel_item | PUT  | /orders/<int:order_id>/items/<int:item_id>/cancel | Cancel a single item in the Order that have not being shipped yet
-
+| get_orders    | GET    |  /orders/\<int:order_id>       |   Retrieve a single Order
+|update_orders | PUT     | /orders/\<int:order_id>      |   update an Order based the body that is posted
+| update_order_items  | PUT | /orders/\<int:order_id>/items/\<int:item_id>  | Update an Order item based the body that is posted
+| delete_orders   |   DELETE | /orders/\<int:order_id>   |    Delete an Order based the id specified in the path
+| cancel_orders  | PUT  |  /orders/\<int:order_id>/cancel  |  Cancel all the items of the Order that have not being shipped yet
+| cancel_item | PUT  | /orders/\<int:order_id>/items/\<int:item_id>/cancel | Cancel a single item in the Order that have not being shipped yet
+| ship_item | PUT |  /orders/\<int:order_id>/items/\<int:item_id>/ship | Ship a single item in the Order that have not being cancelled or delivered yet
 ## Model
 
 We've used PostgreSQL for persistence.
 
-####Order:
+#### Order:
 
 |  Column  |  Type  | Constraints  |
 | :---------: | :---------: | :------------: | 
@@ -78,7 +78,7 @@ We've used PostgreSQL for persistence.
 | customer_id | Integer | |
 | created_at | Datetime | |
 
-####Order Item:
+#### Order Item:
 
 |  Column  |  Type  | Constraints  |
 | :----------: | :---------: | :------------: | 
