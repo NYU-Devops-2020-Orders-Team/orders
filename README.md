@@ -1,6 +1,6 @@
 ## orders - NYU Devops
 [![Build Status](https://travis-ci.com/NYU-Devops-2020-Orders-Team/orders.svg?branch=master)](https://travis-ci.com/NYU-Devops-2020-Orders-Team/orders)
-[![codecov](https://codecov.io/gh/NYU-Devops-2020-Orders-Team/orders/branch/master/graph/badge.svg?token=BOA9RMP3VE)](undefined)
+[![codecov](https://codecov.io/gh/NYU-Devops-2020-Orders-Team/orders/branch/master/graph/badge.svg?token=BOA9RMP3VE)](https://codecov.io/gh/NYU-Devops-2020-Orders-Team/orders)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ### Introduction
