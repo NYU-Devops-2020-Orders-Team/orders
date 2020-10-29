@@ -544,3 +544,36 @@ class TestOrderService(TestCase):
         new_item_id = new_order_json["order_items"][0]["item_id"]
         resp = self.app.put("/orders/{}/items/{}/deliver".format(new_order_id, new_item_id))
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deliver_order(self):
+        """ deliver an order """
+        order = self._create_orders(1)[0]
+        resp = self.app.put("/orders/{}/deliver".format(order.id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_deliver_order_not_found(self):
+        """ deliver an order when order does not exist"""
+        resp = self.app.put("/orders/{}/deliver".format(0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_deliver_order_with_all_delivered_canceled(self):
+        """ deliver an order with all delivered/canceled items """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "DELIVERED"
+        order_factory.order_items[1].status = "CANCELLED"
+
+        new_order_id = self._create_new_order(order_factory)["id"]
+
+        resp = self.app.put("/orders/{}/deliver".format(new_order_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deliver_order_with_some_delivered_canceled(self):
+        """ deliver an order with some delivered/canceled items """
+        order_factory = _get_order_factory_with_items(3)
+        order_factory.order_items[0].status = "DELIVERED"
+        order_factory.order_items[1].status = "CANCELLED"
+
+        new_order_id = self._create_new_order(order_factory)["id"]
+
+        resp = self.app.put("/orders/{}/deliver".format(new_order_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
