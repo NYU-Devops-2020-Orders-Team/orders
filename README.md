@@ -65,6 +65,7 @@ If the VM is no longer needed you can remove it with:
 | delete_orders   |   DELETE | /orders/\<int:order_id>   |    Delete an Order based the id specified in the path
 | cancel_orders  | PUT  |  /orders/\<int:order_id>/cancel  |  Cancel all the items of the Order that have not being shipped yet
 | cancel_item | PUT  | /orders/\<int:order_id>/items/\<int:item_id>/cancel | Cancel a single item in the Order that have not being shipped yet
+| ship_orders  | PUT  |  /orders/\<int:order_id>/ship  |  Ship all the items in an Order
 | ship_item | PUT |  /orders/\<int:order_id>/items/\<int:item_id>/ship | Ship a single item in the Order that have not being cancelled or delivered yet
 ### Model
 

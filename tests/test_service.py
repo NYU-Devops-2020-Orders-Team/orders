@@ -432,7 +432,7 @@ class TestOrderService(TestCase):
         """ Ship an order with all delivered/canceled items """
         order_factory = _get_order_factory_with_items(2)
         order_factory.order_items[0].status = "DELIVERED"
-        order_factory.order_items[1].status = "CANCELED"
+        order_factory.order_items[1].status = "CANCELLED"
 
         new_order_id = self._create_new_order(order_factory)["id"]
 
@@ -443,7 +443,7 @@ class TestOrderService(TestCase):
         """ Ship an order with some shipped/delivered/canceled items """
         order_factory = _get_order_factory_with_items(3)
         order_factory.order_items[0].status = "DELIVERED"
-        order_factory.order_items[1].status = "CANCELED"
+        order_factory.order_items[1].status = "CANCELLED"
 
         new_order_id = self._create_new_order(order_factory)["id"]
 

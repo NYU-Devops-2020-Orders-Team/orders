@@ -287,7 +287,7 @@ def ship_orders(order_id):
 
     shipped_delivered_canceled_orders = 0
     for i in range(len(order.order_items)):
-        if order.order_items[i].status in ["DELIVERED", "CANCELED"]:
+        if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
             shipped_delivered_canceled_orders += 1
         elif order.order_items[i].status != "SHIPPED":
             order.order_items[i].status = "SHIPPED"
