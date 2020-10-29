@@ -457,9 +457,6 @@ class TestOrderService(TestCase):
         resp = self.app.put("/orders/{}/items/{}/ship".format(new_order_id, new_item_id))
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-
-
-##########
     def test_deliver_order(self):
         """ deliver an order """
         order = self._create_orders(1)[0]
