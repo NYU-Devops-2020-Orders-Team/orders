@@ -349,6 +349,29 @@ def deliver_item(order_id, item_id):
 
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
+######################################################################
+# DELIVER AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/deliver", methods=["PUT"])
+def deliver_orders(order_id):
+    """ deliver all the items of the Order that have not being delivered yet """
+    app.logger.info("Request to deliver order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    shipped_delivered_canceled_orders = 0
+    for i in range(len(order.order_items)):
+        if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
+            shipped_delivered_canceled_orders += 1
+        elif order.order_items[i].status != "DELIVERED":
+            order.order_items[i].status = "DELIVERED"
+    if shipped_delivered_canceled_orders == len(order.order_items):
+        raise DataValidationError("All the items in this order are DELIVERED/CANCELED, no items can be delivered.")
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
 if __name__ == '__main__':
     app.run()
 
