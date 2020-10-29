@@ -64,8 +64,9 @@ If the VM is no longer needed you can remove it with:
 | update_order_items  | PUT | /orders/\<int:order_id>/items/\<int:item_id>  | Update an Order item based the body that is posted
 | delete_orders   |   DELETE | /orders/\<int:order_id>   |    Delete an Order based the id specified in the path
 | cancel_orders  | PUT  |  /orders/\<int:order_id>/cancel  |  Cancel all the items of the Order that have not being shipped yet
-| cancel_item | PUT  | /orders/\<int:order_id>/items/\<int:item_id>/cancel | Cancel a single item in the Order that have not being shipped yet
-| ship_item | PUT |  /orders/\<int:order_id>/items/\<int:item_id>/ship | Ship a single item in the Order that have not being cancelled or delivered yet
+| cancel_item | PUT  | /orders/\<int:order_id>/items/\<int:item_id>/cancel | Cancel a single item in the Order that has not been shipped yet
+| ship_item | PUT |  /orders/\<int:order_id>/items/\<int:item_id>/ship | Ship a single item in the Order that has not been cancelled or delivered yet
+| deliver_item | PUT |  /orders/\<int:order_id>/items/\<int:item_id>/deliver | Deliver a single item in the Order that has been shipped but not delivered or cancelled
 ### Model
 
 We've used PostgreSQL for persistence.

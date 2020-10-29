@@ -456,3 +456,58 @@ class TestOrderService(TestCase):
         new_item_id = new_order_json["order_items"][0]["item_id"]
         resp = self.app.put("/orders/{}/items/{}/ship".format(new_order_id, new_item_id))
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deliver_order_item(self):
+        """ Deliver an order item """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "SHIPPED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/deliver".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)        
+
+    def test_deliver_order_item_order_not_found(self):
+        """ Deliver an order item when order does not exist"""
+        resp = self.app.put("/orders/{}/items/{}/deliver".format(0, 0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_deliver_order_item_item_not_found(self):
+        """ Deliver an order item when order item does not exist"""
+        order = self._create_orders(1)[0]
+        resp = self.app.put("/orders/{}/items/{}/deliver".format(order.id, 0))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_deliver_order_item_with_placed_status(self):
+        """ Deliver an order item with placed status """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "PLACED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/deliver".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deliver_order_item_with_cancelled_status(self):
+        """ Deliver an order item with cancelled status """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "CANCELLED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/deliver".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deliver_order_item_with_delivered_status(self):
+        """ Deliver an order item with delivered status """
+        order_factory = _get_order_factory_with_items(2)
+        order_factory.order_items[0].status = "DELIVERED"
+
+        new_order_json = self._create_new_order(order_factory)
+        new_order_id = new_order_json["id"]
+        new_item_id = new_order_json["order_items"][0]["item_id"]
+        resp = self.app.put("/orders/{}/items/{}/deliver".format(new_order_id, new_item_id))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
