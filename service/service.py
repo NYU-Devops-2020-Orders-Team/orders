@@ -275,6 +275,29 @@ def cancel_item(order_id, item_id):
 
 
 ######################################################################
+# SHIP AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/ship", methods=["PUT"])
+def ship_orders(order_id):
+    """ Ship all the items of the Order that have not being shipped yet """
+    app.logger.info("Request to ship order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    shipped_delivered_canceled_orders = 0
+    for i in range(len(order.order_items)):
+        if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
+            shipped_delivered_canceled_orders += 1
+        elif order.order_items[i].status != "SHIPPED":
+            order.order_items[i].status = "SHIPPED"
+    if shipped_delivered_canceled_orders == len(order.order_items):
+        raise DataValidationError("All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
+    order.update()
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
 # SHIP AN ITEM IN AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>/items/<int:item_id>/ship", methods=["PUT"])
