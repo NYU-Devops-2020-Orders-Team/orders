@@ -320,6 +320,35 @@ def ship_item(order_id, item_id):
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
+######################################################################
+# DELIVER AN ITEM IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>/deliver", methods=["PUT"])
+def deliver_item(order_id, item_id):
+    """ 
+    Change status of a single item in the Order to "DELIVERED".
+    The item has not been cancelled and has been shipped 
+    """
+    app.logger.info("Request to deliver item with id: %s in order with id: %s", item_id, order_id)
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+    order_item = find_order_item(order.order_items, item_id)
+    if not order_item:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    if order_item.status == "PLACED":
+        raise DataValidationError("Item has not been shipped yet.")
+    if order_item.status == "CANCELLED":
+        raise DataValidationError("Item has already been cancelled.")
+    if order_item.status == "DELIVERED":
+        raise DataValidationError("Item has already been delivered.")
+    if order_item.status == "SHIPPED":
+        order_item.status = "DELIVERED"
+        order.update()
+
+    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
 if __name__ == '__main__':
     app.run()
 
