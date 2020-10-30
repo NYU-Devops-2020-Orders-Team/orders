@@ -3,7 +3,7 @@ import unittest
 import os
 from service.models import OrderItem, DataValidationError
 
-DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb")
+DATABASE_URI = os.getenv("TEST_DB_URI", "postgres://postgres:postgres@localhost:5432/testdb")
 
 
 ######################################################################
