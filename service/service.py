@@ -360,14 +360,16 @@ def deliver_orders(order_id):
     if not order:
         raise NotFound("Order with id '{}' was not found.".format(order_id))
 
-    shipped_delivered_canceled_orders = 0
+    cancelled_orders = 0
     for i in range(len(order.order_items)):
-        if order.order_items[i].status in ["PLACED", "CANCELLED"]:
-            shipped_delivered_canceled_orders += 1
+        if order.order_items[i].status == "PLACED":
+            raise DataValidationError("At least one item in this order is PLACED, order cannot be delivered.")
+        elif order.order_items[i].status == "CANCELLED":
+            cancelled_orders+=1
         elif order.order_items[i].status != "DELIVERED":
             order.order_items[i].status = "DELIVERED"
-    if shipped_delivered_canceled_orders == len(order.order_items):
-        raise DataValidationError("All the items in this order are DELIVERED/CANCELED, no items can be delivered.")
+    if cancelled_orders == len(order.order_items):
+        raise DataValidationError("All the items in this order are CANCELED, no items can be delivered.")
     order.update()
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
