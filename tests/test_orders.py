@@ -36,7 +36,7 @@ class TestOrders(unittest.TestCase):
 
     def test_init_order(self):
         """ Initialize an order and assert that it exists """
-        order_items = [OrderItem(product="product", quantity=1, price=5, status="PLACED")]
+        order_items = [OrderItem(product_id=1, quantity=1, price=5, status="PLACED")]
         order = Order(customer_id=123, order_items=order_items)
         self.assertTrue(order is not None)
         self.assertEqual(order.id, None)
@@ -55,7 +55,7 @@ class TestOrders(unittest.TestCase):
 
     def test_create_order(self):
         """ Create an order with a single item in the database """
-        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_item = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
         order_items = [order_item]
         order = Order(customer_id=123, order_items=order_items)
         self.assertTrue(order is not None)
@@ -71,15 +71,15 @@ class TestOrders(unittest.TestCase):
 
     def test_create_order_with_no_customer_id(self):
         """ Create an order with no customer id """
-        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_item = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
         order_items = [order_item]
         order = Order(order_items=order_items)
         self.assertRaises(DataValidationError, order.create)
 
     def test_create_order_with_multiple_items(self):
         """ Create an order with multiple order items """
-        order_item1 = OrderItem(product="product1", quantity=1, price=5, status="PLACED")
-        order_item2 = OrderItem(product="product2", quantity=1, price=5, status="PLACED")
+        order_item1 = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
+        order_item2 = OrderItem(product_id=2, quantity=1, price=5, status="PLACED")
         order_items = [order_item1, order_item2]
         order = Order(customer_id=123, order_items=order_items)
         order.create()
@@ -101,7 +101,7 @@ class TestOrders(unittest.TestCase):
 
     def test_update_an_order(self):
         """ Update an existing Order """
-        order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
+        order_item1 = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
         order_items = [order_item1]
         order = Order(customer_id=111, order_items=order_items)
         order.create()
@@ -116,7 +116,7 @@ class TestOrders(unittest.TestCase):
 
     def test_update_an_order_not_exists(self):
         """ Update a non-existing Order """
-        order_item1 = OrderItem(product="p1", quantity=1, price=5, status="PLACED")
+        order_item1 = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
         order_items = [order_item1]
         order = Order(id=1234567, customer_id=111, order_items=order_items)
         order.update()
@@ -124,14 +124,14 @@ class TestOrders(unittest.TestCase):
 
     def test_update_order_with_no_id(self):
         """ Update an order with no id """
-        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_item = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
         order_items = [order_item]
         order = Order(customer_id=123, order_items=order_items)
         self.assertRaises(DataValidationError, order.update)
 
     def test_update_order_with_no_customer_id(self):
         """ Update an order with no customer id """
-        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
+        order_item = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
         order_items = [order_item]
         order = Order(id=1, order_items=order_items)
         self.assertRaises(DataValidationError, order.update)
@@ -144,8 +144,8 @@ class TestOrders(unittest.TestCase):
     def test_serialize_an_order(self):
         """ Serialization of an Order """
         date = datetime.now
-        order_item = OrderItem(product="product", quantity=1, price=5, status="PLACED")
-        order_item2 = OrderItem(product="product2", quantity=1, price=5, status="PLACED")
+        order_item = OrderItem(product_id=1, quantity=1, price=5, status="PLACED")
+        order_item2 = OrderItem(product_id=2, quantity=1, price=5, status="PLACED")
         order_items = [order_item, order_item2]
         order = Order(customer_id=123, created_date=date, order_items=order_items)
         data = order.serialize()
@@ -163,7 +163,7 @@ class TestOrders(unittest.TestCase):
         """ Deserialization of an Order """
         data = {"customer_id": 123,
                 "order_items": [
-                    {"product": "product",
+                    {"product_id": 1,
                      "quantity": 1,
                      "price": 5,
                      "status": "PLACED"}
@@ -176,7 +176,7 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order.created_date, None)
         self.assertEqual(len(order.order_items), 1)
         self.assertEqual(order.order_items[0].item_id, None)
-        self.assertEqual(order.order_items[0].product, "product")
+        self.assertEqual(order.order_items[0].product_id, 1)
 
     def test_deserialize_bad_data(self):
         """ Deserialization of bad data """
@@ -187,7 +187,7 @@ class TestOrders(unittest.TestCase):
     def test_deserialize_bad_data_with_keys_missing(self):
         """ Deserialization of bad order data with few keys missing """
         data = {"order_items": [{
-            "product": "product",
+            "product_id": 1,
             "quantity": 1,
             "price": 5,
             "status": "PLACED"
@@ -197,7 +197,7 @@ class TestOrders(unittest.TestCase):
 
     def test_find_order(self):
         """ Find an Order by ID """
-        order_items1 = [OrderItem(product="product1", quantity=1, price=5, status="PLACED")]
+        order_items1 = [OrderItem(product_id=1, quantity=1, price=5, status="PLACED")]
         order1 = Order(customer_id=111, order_items=order_items1)
         order1.create()
         order = Order.find(order1.id)
@@ -205,7 +205,7 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order.id, order1.id)
         self.assertEqual(order.customer_id, 111)
         self.assertEqual(len(order.order_items), 1)
-        self.assertEqual(order.order_items[0].product, "product1")
+        self.assertEqual(order.order_items[0].product_id, 1)
 
     def test_find_invalid_order(self):
         """ Find an Order by an invalid ID """
@@ -214,7 +214,7 @@ class TestOrders(unittest.TestCase):
 
     def test_delete_an_order(self):
         """ Delete an Order """
-        order_items1 = [OrderItem(product="product1", quantity=1, price=5.0, status="PLACED")]
+        order_items1 = [OrderItem(product_id=1, quantity=1, price=5.0, status="PLACED")]
         order = Order(customer_id=111, order_items=order_items1)
         order.create()
         self.assertEqual(len(Order.all()), 1)

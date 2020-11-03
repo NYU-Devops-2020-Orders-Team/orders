@@ -128,10 +128,10 @@ class TestOrderService(TestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_create_orders_missing_product(self):
-        """ Create an order missing product in order_items """
+    def test_create_orders_missing_product_id(self):
+        """ Create an order missing product_id in order_items """
         order_factory = _get_order_factory_with_items(1)
-        order_factory.order_items[0].product = None
+        order_factory.order_items[0].product_id = None
         resp = self.app.post('/orders',
                              json=order_factory.serialize(),
                              content_type='application/json')
@@ -327,7 +327,7 @@ class TestOrderService(TestCase):
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_item = resp.get_json()["order_items"][0]
-        self.assertEqual(new_item["product"], order_item.product)
+        self.assertEqual(new_item["product_id"], order_item.product_id)
         self.assertEqual(new_item["quantity"], order_item.quantity)
         self.assertAlmostEqual(new_item["price"], order_item.price)
         self.assertEqual(new_item["status"], order_item.status)
