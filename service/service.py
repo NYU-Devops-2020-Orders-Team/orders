@@ -186,7 +186,7 @@ def update_order_items(order_id, item_id):
     for i in range(len(order.order_items)):
         if order.order_items[i].item_id == item_id:
             order_item_found = True
-            order.order_items[i].product = new_order_item.product
+            order.order_items[i].product_id = new_order_item.product_id
             order.order_items[i].quantity = new_order_item.quantity
             order.order_items[i].price = new_order_item.price
             order.order_items[i].status = new_order_item.status

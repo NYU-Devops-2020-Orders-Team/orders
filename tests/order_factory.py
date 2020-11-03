@@ -47,7 +47,7 @@ class OrderItemFactory(BaseFactory):
         model = OrderItem
 
     item_id = factory.Sequence(lambda n: n)
-    product = random.randint(0, 100000)
+    product_id = random.randint(0, 100000)
     quantity = random.randint(0, 100000)
     price = random.uniform(0, 100000)
     status = FuzzyChoice(choices=["PLACED"])
