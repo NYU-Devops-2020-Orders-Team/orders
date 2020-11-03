@@ -369,7 +369,7 @@ def deliver_orders(order_id):
         elif order.order_items[i].status != "DELIVERED":
             order.order_items[i].status = "DELIVERED"
     if cancelled_orders == len(order.order_items):
-        raise DataValidationError("All the items in this order are CANCELED, no items can be delivered.")
+        raise DataValidationError("All the items in this order are CANCELLED, no items can be delivered.")
     order.update()
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
