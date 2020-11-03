@@ -21,7 +21,7 @@ class OrderItem(db.Model):
     # Order Item Table Schema
     ##################################################
     item_id = db.Column(db.Integer, primary_key=True)
-    product = db.Column(db.String(40), nullable=False)
+    product_id = db.Column(db.Integer, nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String, nullable=False)
@@ -34,7 +34,7 @@ class OrderItem(db.Model):
         """ Serializes a OrderItem into a dictionary """
         return {
             "item_id": self.item_id,
-            "product": self.product,
+            "product_id": self.product_id,
             "quantity": self.quantity,
             "price": self.price,
             "status": self.status,
@@ -51,13 +51,13 @@ class OrderItem(db.Model):
         :rtype: OrderItem
         """
         try:
-            self.product = data["product"]
+            self.product_id = data["product_id"]
             self.quantity = data["quantity"]
             self.price = data["price"]
             self.status = data["status"]
 
-            if self.product is None or not isinstance(self.product, str):
-                raise DataValidationError("Invalid order: invalid product")
+            if self.product_id is None or not isinstance(self.product_id, int):
+                raise DataValidationError("Invalid order: invalid product ID")
             if self.quantity is None or not isinstance(self.quantity, int):
                 raise DataValidationError("Invalid order: invalid quantity")
             if self.price is None or \

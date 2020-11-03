@@ -9,7 +9,7 @@ services:
   - postgresql
 
 env:
-  - DATABASE_URI=postgres://postgres:postgres@localhost:5432/testdb
+  - TEST_DB_URI=postgres://postgres:postgres@localhost:5432/testdb
 
 before_script:
   - psql -c "create database testdb;" -U postgres

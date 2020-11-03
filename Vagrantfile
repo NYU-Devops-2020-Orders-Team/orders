@@ -1,6 +1,17 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# WARNING: You will need the following plugin:
+# vagrant plugin install vagrant-docker-compose
+if Vagrant.plugins_enabled?
+  unless Vagrant.has_plugin?('vagrant-docker-compose')
+    puts 'Plugin missing.'
+    system('vagrant plugin install vagrant-docker-compose')
+    puts 'Dependencies installed, please try the command again.'
+    exit
+  end
+end
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -13,6 +24,9 @@ Vagrant.configure(2) do |config|
   
     # set up network ip and port forwarding
     config.vm.network "forwarded_port", guest: 5000, host: 5000, host_ip: "127.0.0.1"
+    config.vm.network "forwarded_port", guest: 8001, host: 8001, host_ip: "127.0.0.1"
+    config.vm.network "forwarded_port", guest: 5432, host: 5432, host_ip: "127.0.0.1"
+
     config.vm.network "private_network", ip: "192.168.33.10"
   
     # Windows users need to change the permission of files and directories
@@ -50,6 +64,10 @@ Vagrant.configure(2) do |config|
     if File.exists?(File.expand_path("~/.vimrc"))
       config.vm.provision "file", source: "~/.vimrc", destination: "~/.vimrc"
     end
+    # Copy your IBM Cloud API Key if you have one
+    if File.exists?(File.expand_path("~/.bluemix/apiKey.json"))
+      config.vm.provision "file", source: "~/.bluemix/apiKey.json", destination: "~/.bluemix/apiKey.json"
+    end
 
     ######################################################################
     # Add PostgreSQL docker container
@@ -76,5 +94,38 @@ Vagrant.configure(2) do |config|
       #Add a test DB
       docker exec postgres psql -c 'create database testdb;' -U postgres
     SHELL
+
+    ############################################################
+    # Add Docker compose
+    ############################################################
+    config.vm.provision :docker_compose
+    # config.vm.provision :docker_compose,
+    #   yml: "/vagrant/docker-compose.yml",
+    #   rebuild: true,
+    #   run: "always"
+
+  ######################################################################
+  # Setup a Bluemix and Kubernetes environment
+  ######################################################################
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "\n************************************"
+    echo " Installing IBM Cloud CLI..."
+    echo "************************************\n"
+    # Install IBM Cloud CLI as Vagrant user
+    sudo -H -u vagrant sh -c 'curl -sL http://ibm.biz/idt-installer | bash'
+    sudo -H -u vagrant sh -c "echo 'source <(kubectl completion bash)' >> ~/.bashrc"
+    sudo -H -u vagrant sh -c "ibmcloud cf install --version 6.46.1"
+    sudo -H -u vagrant sh -c "echo alias ic=/usr/local/bin/ibmcloud >> ~/.bash_aliases"
+    echo "\n"
+    echo "If you have an IBM Cloud API key in ~/.bluemix/apiKey.json"
+    echo "You can login with the following command:"
+    echo "\n"
+    echo "ibmcloud login -a https://cloud.ibm.com --apikey @~/.bluemix/apiKey.json -r us-south"
+    echo "\n"
+    echo "\n************************************"
+    echo " For the Kubernetes Dashboard use:"
+    echo " kubectl proxy --address='0.0.0.0'"
+    echo "************************************\n"
+  SHELL
 
   end
