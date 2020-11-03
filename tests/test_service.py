@@ -17,7 +17,7 @@ from .order_factory import OrderFactory, OrderItemFactory
 
 logging.disable(logging.CRITICAL)
 
-DATABASE_URI = os.getenv("TEST_DB_URI", "postgres://postgres:postgres@localhost:5432/testdb")
+DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb")
 
 
 def _get_order_factory_with_items(count):
