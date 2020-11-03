@@ -33,6 +33,7 @@ class TestOrders(unittest.TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+        db.engine.dispose()
 
     def test_init_order(self):
         """ Initialize an order and assert that it exists """

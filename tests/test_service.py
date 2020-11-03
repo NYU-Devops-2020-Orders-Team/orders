@@ -54,8 +54,10 @@ class TestOrderService(TestCase):
         self.app = app.test_client()
 
     def tearDown(self):
+        """ Runs after each test """
         db.session.remove()
         db.drop_all()
+        db.engine.dispose()
 
     def _create_orders(self, count):
         """ Factory method to create orders in bulk """
