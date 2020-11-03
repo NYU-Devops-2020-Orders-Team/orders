@@ -4,6 +4,8 @@ Module to define the models for the orders resource.
 import logging
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from retry import retry
+from urllib.error import HTTPError
 
 # Create the SQLAlchemy object to be initialized later in init_db()
 db = SQLAlchemy()
@@ -92,6 +94,7 @@ class Order(db.Model):
     def __repr__(self):
         return "<Order %r>" % self.id
 
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def create(self):
         """
         Creates an order in the database
@@ -105,6 +108,7 @@ class Order(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def update(self):
         """
         Updates an Order to the database
@@ -117,6 +121,7 @@ class Order(db.Model):
             raise DataValidationError("Order Items can't be empty")
         db.session.commit()
 
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def delete(self):
         """
         Removes an Order from the data store
@@ -163,6 +168,7 @@ class Order(db.Model):
         return self
 
     @classmethod
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def init_db(cls, app):
         """Initializes the database session
 
@@ -176,18 +182,21 @@ class Order(db.Model):
         db.create_all()
 
     @classmethod
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def all(cls):
         """ Returns all of the Orders in the database """
         cls.logger.info("Listing all Orders")
         return cls.query.all()
 
     @classmethod
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def find(cls, order_id):
         """ Finds a Order by it's ID """
         cls.logger.info("Processing lookup for id %s ...", order_id)
         return cls.query.get(order_id)
 
     @classmethod
+    @retry(HTTPError, delay=1, backoff=2, tries=5)
     def find_by_customer_id(cls, customer_id: int):
         """Returns all of the orders with customer_id: customer_id """
         cls.logger.info("Processing customer_id query for %s ...", customer_id)
