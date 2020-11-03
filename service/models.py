@@ -21,7 +21,7 @@ class OrderItem(db.Model):
     # Order Item Table Schema
     ##################################################
     item_id = db.Column(db.Integer, primary_key=True)
-    product = db.Column(db.String(40), nullable=False)
+    product = db.Column(db.Integer, nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String, nullable=False)
@@ -56,7 +56,7 @@ class OrderItem(db.Model):
             self.price = data["price"]
             self.status = data["status"]
 
-            if self.product is None or not isinstance(self.product, str):
+            if self.product is None or not isinstance(self.product, int):
                 raise DataValidationError("Invalid order: invalid product")
             if self.quantity is None or not isinstance(self.quantity, int):
                 raise DataValidationError("Invalid order: invalid quantity")
