@@ -86,7 +86,7 @@ We've used PostgreSQL for persistence.
 |  Column  |  Type  | Constraints  |
 | :----------: | :---------: | :------------: | 
 | item_id | Integer | Primary Key |
-| product | String | |
+| product_id | Integer | |
 | quantity | Integer | |
 | price | Float | |
 | status | String | |
