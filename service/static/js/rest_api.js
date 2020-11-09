@@ -1,8 +1,11 @@
 $(function () {
     var row_num = 1;
 
-    const CLEAR = 0;
-    const UPDATE = 1;
+    const action = {
+        RESET: "reset",
+        UPDATE: "update",
+        NO_ACTION: ""
+    }
     
 
     // ****************************************
@@ -28,8 +31,8 @@ $(function () {
         }
     }
 
-    // Clears all form field
-    function clear_form_data() {
+    // Resets all form field
+    function reset_form_data() {
         $("#order_customer_id").val("");
         $("#order_created_date").val("");
 
@@ -78,14 +81,14 @@ $(function () {
     // Updates form and message after done or fail
     function update_form_and_message(ajax, done_action, fail_action) {
         ajax.done(function(res){
-            if (done_action == CLEAR) clear_form_data();
-            else if (done_action == UPDATE) update_form_data(res);
+            if (done_action == action.RESET) reset_form_data();
+            else if (done_action == action.UPDATE) update_form_data(res);
             flash_message("Success");
         });
 
         ajax.fail(function(res){
-            if (fail_action == CLEAR) clear_form_data();
-            else if (fail_action == UPDATE) update_form_data(res);
+            if (fail_action == action.RESET) reset_form_data();
+            else if (fail_action == action.UPDATE) update_form_data(res);
             flash_message(res.responseJSON.message);
         });
     }
@@ -103,7 +106,7 @@ $(function () {
             data: '',
         })
 
-        update_form_and_message(ajax, UPDATE, CLEAR);
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -120,7 +123,7 @@ $(function () {
             data: ''
         })
 
-        update_form_and_message(ajax, UPDATE, CLEAR);
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -137,15 +140,7 @@ $(function () {
             data: ''
         })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -162,15 +157,7 @@ $(function () {
             data: ''
         })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -187,15 +174,7 @@ $(function () {
             data: ''
         })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -213,15 +192,7 @@ $(function () {
             data: ''
         })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -239,15 +210,7 @@ $(function () {
             data: ''
         })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
 
@@ -265,15 +228,7 @@ $(function () {
             data: ''
         })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.RESET);
     });
 
     // ****************************************
@@ -315,14 +270,7 @@ $(function () {
             data: JSON.stringify(data),
         });
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.NO_ACTION);
     });
 
 
@@ -344,14 +292,7 @@ $(function () {
                 data: JSON.stringify(data)
             })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.NO_ACTION);
     });
 
 
@@ -385,24 +326,17 @@ $(function () {
                 data: JSON.stringify(data)
             })
 
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
+        update_form_and_message(ajax, action.UPDATE, action.NO_ACTION);
     });
 
 
     // ****************************************
-    // Clear the form
+    // Reset the form
     // ****************************************
-    $("#clear-form-btn").click(function () {
+    $("#reset-form-btn").click(function () {
         $("#order_id").val("");
         $("#item_id").val("");
-        clear_form_data()
+        reset_form_data()
     });
 
 
@@ -418,24 +352,39 @@ $(function () {
         })
 
         ajax.done(function(res){
-            $("#search_results").empty();
-            $("#search_results").append('<table class="table-striped" cellpadding="10">');
-            var header = '<tr>'
+            $("#results").empty();
+            $("#results").append('<table class="table-striped" cellpadding="10">');
+            var header = '<thead><tr><th colspan="1"></th><th colspan="1"></th><th colspan="1"></th>'
+            header += '<th colspan="5">ORDER ITEMS</th></tr><tr>'
             header += '<th style="width:10%">Order ID</th>'
-            header += '<th style="width:10%">Customer ID</th>'
-            header += '<th style="width:20%">Created Date</th>'
-            header += '<th style="width:60%">Order Items</th></tr>'
-            $("#search_results").append(header);
+            header += '<th style="width:15%">Customer ID</th>'
+            header += '<th style="width:30%">Created Date</th>'
+            header += '<th style="width:10%">Item ID</th>'
+            header += '<th style="width:10%">Product ID</th>'
+            header += '<th style="width:10%">Quantity</th>'
+            header += '<th style="width:10%">Price</th>'
+            header += '<th style="width:10%">Status</th>'
+            $("#results").append(header);
+
+            $("#results").append('<tbody>');
             var first_order = "";
             for(var i = 0; i < res.length; i++) {
                 var order = res[i];
-                var row = "<tr><td>"+order.id+"</td><td>"+order.customer_id+"</td><td>"+order.created_date+"</td><td>"+order.order_items+"</td></tr>";
-                $("#search_results").append(row);
+                var order_row = "<tr><td>"+order.id+"</td><td>"+order.customer_id+"</td><td>"+order.created_date+"</td>";
+                var empty_row = "<tr><td></td><td></td><td></td>";
+                for (var j = 0; j < order.order_items.length; j++) {
+                    var item = order.order_items[j];
+                    var item_row = "<td>"+ item.item_id+"</td><td>"+ item.product_id + "</td><td>" 
+                                         + item.quantity + "</td><td>" + item.price + "</td><td>" 
+                                         + item.status + "</td></tr>";
+                    $("#results").append((j == 0 ? order_row : empty_row) + item_row);
+                }
                 if (i == 0) {
                     first_order = order;
                 }
             }
-            $("#search_results").append('</table>');
+
+            $("#results").append('</tbody></table>');
 
             // copy the first result to the form
             if (first_order != "") {
@@ -447,5 +396,13 @@ $(function () {
         ajax.fail(function(res){
             flash_message(res.responseJSON.message)
         });
+    });
+
+
+    // ****************************************
+    // Clear the results
+    // ****************************************
+    $("#clear-results-btn").click(function () {
+        $("#results").empty();
     });
 })

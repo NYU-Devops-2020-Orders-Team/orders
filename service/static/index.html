@@ -100,42 +100,36 @@
                 <button type="submit" class="btn btn-primary" style="width:28.5%;" id="add-row-btn">Add Row</button>
               </div>
               <div class="col-sm-6 text-right">
-                <button type="submit" class="btn btn-danger" id="list-all-btn">List All</button>
                 <button type="submit" class="btn btn-warning" id="create-btn">Create</button>
                 <button type="submit" class="btn btn-info" id="update-btn">Update</button>
                 <button type="submit" class="btn btn-success" id="update-item-btn">Update Item</button>
-                <button type="submit" class="btn btn-secondary" id="clear-form-btn">Clear Form</button>
+                <button type="submit" class="btn btn-secondary" id="reset-form-btn">Reset Form</button>
               </div>
             </div>
           </div> <!-- form div -->
         </div>
 
         <div class="well">
-          <!-- Flash Message -->
-          <div class="table-responsive">
-            <table class="table" style="table-layout: unset">
-              <tr><td>Status:</td><td><span id="flash_message" style="text-align: left;"></span></td></tr>
-            </table>
-          </div>
-          <!-- Search Results -->
-          <div class="table-responsive col-md-12" style="table-layout: unset" id="search_results">
-            <table class="table-striped">
-              <thead>
-              <tr>
-                  <th class="col-md-1">ID</th>
-                  <th class="col-md-4">Name</th>
-                  <th class="col-md-4">Category</th>
-                  <th class="col-md-3">Available</th>
-              </tr>
-              </thead>
-            </table>
+          <div class="form-horizontal">
+            <!-- Flash Message -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="flash_message">Status:</label>
+              <label class="control-label col-sm-7 text-align-left" style="padding-right: 0px;" id="flash_message"></label>
+              <div class="col-sm-3 text-right">
+                <button type="submit" class="btn btn-danger" style="width:38%;" id="list-all-btn">List All</button>
+                <button type="submit" class="btn btn-secondary" style="width:38%;" id="clear-results-btn">Clear Results</button>
+              </div>
+            </div>
+            <!-- Results -->
+            <div class="form-group">
+              <div class="table-responsive col-sm-12" style="padding-left:10%;"  id="results"></div>
+            </div>
           </div>
         </div>
 
-
         <footer>
           <br><br>
-          <p>&copy; NYU DevOps Company 2020</p>
+          <p> &copy; NYU DevOps Company 2020</p>
         </footer>
       </div><!--/row-->
     </div><!-- container -->
