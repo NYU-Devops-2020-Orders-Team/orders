@@ -82,9 +82,10 @@ class TestOrderService(TestCase):
         """ Home Page """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["name"], "Orders REST API Service")
-        self.assertEqual(data["version"], "1.0")
+        # data = resp.get_json()
+        # self.assertEqual(data["name"], "Orders REST API Service")
+        # self.assertEqual(data["version"], "1.0")
+        self.assertIn(b'Order REST API Service', resp.data)
 
     def test_create_orders(self):
         """ Create an order """
