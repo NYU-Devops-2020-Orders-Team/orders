@@ -302,7 +302,12 @@ $(function () {
     $("#update-item-btn").click(function () {
         var order_id = parseInt($("#order_id").val());
         var item_id = parseInt($("#item_id").val());
-        var data = {};
+        var data = {
+            "product_id": parseInt($("#order_item0_product_id").val()), 
+            "quantity": parseInt($("#order_item0_quantity").val()), 
+            "price": parseFloat($("#order_item0_price").val()), 
+            "status": $("#order_item0_status").val()
+        };
 
         for (var i = 0; i < row_num; i++) {
             var prefix = "#order_item" + i + "_";
