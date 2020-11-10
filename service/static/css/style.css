@@ -1,0 +1,23 @@
+.btn {
+    width: 19%;
+    padding: 8px 0px;
+}
+
+.form-horizontal .form-group {
+    margin-right: 2%;
+    margin-left: -7%;
+}
+
+.text-align-center {
+    text-align: center !important;
+}
+
+.text-align-left {
+    text-align: left !important;
+}
+
+.btn-secondary {
+    color: #ffffff;
+    background-color: #6c757d;
+    border-color: transparent;
+}

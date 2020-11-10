@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Order RESTful Service</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="static/css/blue_bootstrap.min.css">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="icon" href="static/images/NYU-Logo.png">
+    <script type="text/javascript" src = "static/js/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="static/js/rest_api.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+          <h1>Order REST API Service</h1>
+      </div>
+
+      <div class="col-md-12" id="form_data">
+        <div class="well">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="order_id">Order ID:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="order_id" placeholder="Enter ID of Order">
+              </div>
+              <div class="col-sm-6 text-right">
+                <button type="submit" class="btn btn-danger" id="delete-btn">Delete</button>
+                <button type="submit" class="btn btn-warning" id="retrieve-btn">Retrieve</button>
+                <button type="submit" class="btn btn-info" id="ship-btn">Ship</button>
+                <button type="submit" class="btn btn-success" id="deliver-btn">Deliver</button>
+                <button type="submit" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+              </div>
+            </div>
+          </div> <!-- form div -->
+
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_id">Item ID:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="item_id" placeholder="Enter ID of Item">
+              </div>
+              <div class="col-sm-6 text-right">
+                <button type="submit" class="btn btn-info" id="ship-item-btn">Ship Item</button>
+                <button type="submit" class="btn btn-success" id="deliver-item-btn">Deliver Item</button>
+                <button type="submit" class="btn btn-secondary" id="cancel-item-btn">Cancel Item</button>
+              </div>
+            </div>
+          </div> <!-- form div -->
+
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="order_customer_id">Customer ID:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="order_customer_id" placeholder="Enter customer ID for Order">
+              </div>
+              <label class="control-label col-sm-2" for="order_created_date">Created Date:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="order_created_date" placeholder="Enter created date for Order">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="order_items">Order Items:</label>
+              <label class="control-label col-sm-2 text-align-center">Item ID</label>
+              <label class="control-label col-sm-2 text-align-center">Product ID</label>
+              <label class="control-label col-sm-2 text-align-center">Quantity</label>
+              <label class="control-label col-sm-2 text-align-center">Price</label>
+              <label class="control-label col-sm-2 text-align-center">Status</label>
+            </div>
+            <div id="order_items">
+              <div class="form-group">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-2">
+                  <input type="text" class="form-control" id="order_item0_item_id" placeholder="Enter Item ID">
+                </div>
+                <div class="col-sm-2">
+                  <input type="text" class="form-control" id="order_item0_product_id" placeholder="Enter Product ID">
+                </div>
+                <div class="col-sm-2">
+                  <input type="text" class="form-control" id="order_item0_quantity" placeholder="Enter Quantity">
+                </div>
+                <div class="col-sm-2">
+                  <input type="text" class="form-control" id="order_item0_price" placeholder="Enter Price">
+                </div>
+                <div class="col-sm-2">
+                  <select class="form-control" id="order_item0_status">
+                    <option disabled selected value> -- select status -- </option>
+                      <option value="PLACED">Placed</option>
+                      <option value="SHIPPED">Shipped</option>
+                      <option value="DELIVERED">Delivered</option>
+                      <option value="CANCELLED">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-2"></div>
+              <div class="col-sm-4 text-left">
+                <button type="submit" class="btn btn-primary" style="width:28.5%;" id="add-row-btn">Add Row</button>
+              </div>
+              <div class="col-sm-6 text-right">
+                <button type="submit" class="btn btn-warning" id="create-btn">Create</button>
+                <button type="submit" class="btn btn-info" id="update-btn">Update</button>
+                <button type="submit" class="btn btn-success" id="update-item-btn">Update Item</button>
+                <button type="submit" class="btn btn-secondary" id="reset-form-btn">Reset Form</button>
+              </div>
+            </div>
+          </div> <!-- form div -->
+        </div>
+
+        <div class="well">
+          <div class="form-horizontal">
+            <!-- Flash Message -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="flash_message">Status:</label>
+              <label class="control-label col-sm-7 text-align-left" style="padding-right: 0px;" id="flash_message"></label>
+              <div class="col-sm-3 text-right">
+                <button type="submit" class="btn btn-danger" style="width:38%;" id="list-all-btn">List All</button>
+                <button type="submit" class="btn btn-secondary" style="width:38%;" id="clear-results-btn">Clear Results</button>
+              </div>
+            </div>
+            <!-- Results -->
+            <div class="form-group">
+              <div class="table-responsive col-sm-12" style="padding-left:10%;"  id="results"></div>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <br><br>
+          <p> &copy; NYU DevOps Company 2020</p>
+        </footer>
+      </div><!--/row-->
+    </div><!-- container -->
+  </body>
+</html>
