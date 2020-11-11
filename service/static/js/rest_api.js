@@ -93,6 +93,55 @@ $(function () {
         });
     }
 
+    // Updates results
+    function update_results(ajax) {
+        ajax.done(function(res){
+            $("#results").empty();
+            $("#results").append('<table class="table-striped" cellpadding="10">');
+            var header = '<thead><tr><th colspan="1"></th><th colspan="1"></th><th colspan="1"></th>'
+            header += '<th colspan="5">ORDER ITEMS</th></tr><tr>'
+            header += '<th style="width:10%">Order ID</th>'
+            header += '<th style="width:15%">Customer ID</th>'
+            header += '<th style="width:30%">Created Date</th>'
+            header += '<th style="width:10%">Item ID</th>'
+            header += '<th style="width:10%">Product ID</th>'
+            header += '<th style="width:10%">Quantity</th>'
+            header += '<th style="width:10%">Price</th>'
+            header += '<th style="width:10%">Status</th>'
+            $("#results").append(header);
+
+            $("#results").append('<tbody>');
+            var first_order = "";
+            for(var i = 0; i < res.length; i++) {
+                var order = res[i];
+                var order_row = "<tr><td>"+order.id+"</td><td>"+order.customer_id+"</td><td>"+order.created_date+"</td>";
+                var empty_row = "<tr><td></td><td></td><td></td>";
+                for (var j = 0; j < order.order_items.length; j++) {
+                    var item = order.order_items[j];
+                    var item_row = "<td>"+ item.item_id+"</td><td>"+ item.product_id + "</td><td>" 
+                                         + item.quantity + "</td><td>" + item.price + "</td><td>" 
+                                         + item.status + "</td></tr>";
+                    $("#results").append((j == 0 ? order_row : empty_row) + item_row);
+                }
+                if (i == 0) {
+                    first_order = order;
+                }
+            }
+
+            $("#results").append('</tbody></table>');
+
+            // copy the first result to the form
+            if (first_order != "") {
+                update_form_data(first_order)
+            }
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
+    }
+
     // ****************************************
     // Delete an Order
     // ****************************************
@@ -355,52 +404,24 @@ $(function () {
             contentType: "application/json",
             data: ''
         })
+        
+        update_results(ajax);
+    });
 
-        ajax.done(function(res){
-            $("#results").empty();
-            $("#results").append('<table class="table-striped" cellpadding="10">');
-            var header = '<thead><tr><th colspan="1"></th><th colspan="1"></th><th colspan="1"></th>'
-            header += '<th colspan="5">ORDER ITEMS</th></tr><tr>'
-            header += '<th style="width:10%">Order ID</th>'
-            header += '<th style="width:15%">Customer ID</th>'
-            header += '<th style="width:30%">Created Date</th>'
-            header += '<th style="width:10%">Item ID</th>'
-            header += '<th style="width:10%">Product ID</th>'
-            header += '<th style="width:10%">Quantity</th>'
-            header += '<th style="width:10%">Price</th>'
-            header += '<th style="width:10%">Status</th>'
-            $("#results").append(header);
+    // ****************************************
+    // Find by Customer ID
+    // ****************************************
+    $("#find-by-customer-id-btn").click(function () {
+        var customer_id = parseInt($("#order_customer_id").val());
 
-            $("#results").append('<tbody>');
-            var first_order = "";
-            for(var i = 0; i < res.length; i++) {
-                var order = res[i];
-                var order_row = "<tr><td>"+order.id+"</td><td>"+order.customer_id+"</td><td>"+order.created_date+"</td>";
-                var empty_row = "<tr><td></td><td></td><td></td>";
-                for (var j = 0; j < order.order_items.length; j++) {
-                    var item = order.order_items[j];
-                    var item_row = "<td>"+ item.item_id+"</td><td>"+ item.product_id + "</td><td>" 
-                                         + item.quantity + "</td><td>" + item.price + "</td><td>" 
-                                         + item.status + "</td></tr>";
-                    $("#results").append((j == 0 ? order_row : empty_row) + item_row);
-                }
-                if (i == 0) {
-                    first_order = order;
-                }
-            }
-
-            $("#results").append('</tbody></table>');
-
-            // copy the first result to the form
-            if (first_order != "") {
-                update_form_data(first_order)
-            }
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
+        var ajax = $.ajax({
+            type: "GET",
+            url: "/orders?customer_id=" + customer_id,
+            contentType: "application/json",
+            data: ''
+        })
+        
+        update_results(ajax);
     });
 
 
