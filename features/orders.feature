@@ -6,16 +6,20 @@ Feature: The orders service back-end
 Background:
     Given the following orders
         | id            | customer_id   | order_items   |
-        | 1             | 101           | [11, 12]      |
-        | 2             | 102           | [21, 22, 23]  |
-        | 3             | 103           | [31, 32]      |
+        | 1             | 101           | 1234,2,35.10,SHIPPED&3456,1,1000.20,DELIVERED   |
+        | 2             | 102           | 4567,3,5.60,CANCELLED  |
+        | 3             | 103           | 7890,10,10,PLACED      |
 
-    Given the following order_items
-        | item_id   | product_id    | quantity  | price     | status    | order_id  |
-        | 11        | 1234          | 2         | 35.10     | SHIPPED   | 1         |
-        | 12        | 2345          | 1         | 1.5       | PLACED    | 1         |
-        | 21        | 3456          | 3         | 12.2      | CANCELLED | 2         |
-        | 22        | 4567          | 1         | 5.99      | SHIPPED   | 2         |
-        | 23        | 5678          | 2         | 34.19     | SHIPPED   | 2         |
-        | 31        | 6789          | 7         | 3.59      | DELIVERED | 3         | 
-        | 32        | 7890          | 1         | 6.90      | PLACED    | 3         |     
+
+Scenario: The Server is running
+    When I visit the "Home Page"
+    Then I should see "Order RESTful Service" in the title
+    And I should not see "404 Not Found"
+
+Scenario: List all orders
+    When I visit the "Home Page"
+    And I press the "List-All" button
+    Then I should see order for customer_id "101" in the results
+    And I should see order for customer_id "102" in the results
+    And I should see order for customer_id "103" in the results
+    And I should not see order for customer_id "999" in the results
