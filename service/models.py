@@ -116,7 +116,7 @@ class Order(db.Model):
         if not self.id or not isinstance(self.id, int):
             raise DataValidationError("Update called with invalid id field")
         if self.customer_id is None or not isinstance(self.customer_id, int):
-            raise DataValidationError("Customer id is not valid")
+            raise DataValidationError("Customer Id is not valid")
         if len(self.order_items) == 0:
             raise DataValidationError("Order Items can't be empty")
         db.session.commit()
@@ -154,7 +154,7 @@ class Order(db.Model):
 
             items = data["order_items"]
             if items is None or len(items) == 0:
-                raise DataValidationError("Order items can't be empty")
+                raise DataValidationError("Order Items can't be empty")
             for data_item in items:
                 item = OrderItem()
                 item.deserialize(data_item)

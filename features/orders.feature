@@ -68,3 +68,106 @@ Feature: The orders service back-end
     And I press the "Retrieve" button
     Then I should see the message "404 Not Found: Order with id '0' was not found."
     And the "customer_id" field should be empty
+
+
+  Scenario: Create an Order
+    When I visit the "Home Page"
+    And I set the "customer_id" to "145"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_quantity" to "5"
+    And I set the "item0_price" to "10.99"
+    And I select "Placed" in the "item0_status" dropdown
+    And I press the "add-row" button
+    And I set the "item1_product_id" to "123"
+    And I set the "item1_quantity" to "1"
+    And I set the "item1_price" to "18"
+    And I select "Shipped" in the "item1_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I copy the "id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    And the "customer_id" field should be empty
+    And the "item0_product_id" field should be empty
+    And the "item0_quantity" field should be empty
+    And the "item0_price" field should be empty
+    When I paste the "id" field
+    And I press the "Retrieve" button
+    Then I should see "145" in the "customer_id" field
+    And I should see "21" in the "item0_product_id" field
+    And I should see "5" in the "item0_quantity" field
+    And I should see "10.99" in the "item0_price" field
+    And I should see "Placed" in the "item0_status" dropdown
+    And I should see "123" in the "item1_product_id" field
+    And I should see "1" in the "item1_quantity" field
+    And I should see "18" in the "item1_price" field
+    And I should see "Shipped" in the "item1_status" dropdown
+
+
+  Scenario: Create an Order for an invalid customer id
+    When I visit the "Home Page"
+    And I set the "customer_id" to "abc"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_quantity" to "5"
+    And I set the "item0_price" to "10.99"
+    And I select "Placed" in the "item0_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Customer Id must be integer"
+
+
+  Scenario: Create an Order missing customer id
+    When I visit the "Home Page"
+    And I set the "customer_id" to "abc"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_quantity" to "5"
+    And I set the "item0_price" to "10.99"
+    And I select "Placed" in the "item0_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Customer Id must be integer"
+
+
+  Scenario: Create an Order missing order items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "123"
+    And I press the "Create" button
+    Then I should see the message "Invalid order: invalid product ID"
+
+
+  Scenario: Create an Order missing product id
+    When I visit the "Home Page"
+    And I set the "customer_id" to "123"
+    And I set the "item0_quantity" to "5"
+    And I set the "item0_price" to "10.99"
+    And I select "Placed" in the "item0_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Invalid order: invalid product ID"
+
+
+  Scenario: Create an Order missing quantity
+    When I visit the "Home Page"
+    And I set the "customer_id" to "123"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_price" to "10.99"
+    And I select "Placed" in the "item0_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Invalid order: invalid quantity"
+
+  
+  Scenario: Create an Order missing price
+    When I visit the "Home Page"
+    And I set the "customer_id" to "123"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_quantity" to "5"
+    And I select "Placed" in the "item0_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Invalid order: invalid price"
+
+  Scenario: Create an Order missing status
+    When I visit the "Home Page"
+    And I set the "customer_id" to "123"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_quantity" to "5"
+    And I set the "item0_price" to "10.99"
+    And I press the "Create" button
+    Then I should see the message "Invalid order: invalid status"
+    
