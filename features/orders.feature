@@ -45,11 +45,11 @@ Feature: The orders service back-end
   Scenario: Read an order by id
     When I visit the "Home Page"
     And I press the "List-All" button
-    And I copy the "id" field
+    And I copy the "order_id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     And the "customer_id" field should be empty
-    When I paste the "id" field
+    When I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "101" in the "customer_id" field
     And I should see "1234" in the "item0_product_id" field
@@ -64,7 +64,7 @@ Feature: The orders service back-end
 
   Scenario: Read an order for an invalid id
     When I visit the "Home Page"
-    And I set the "id" to "0"
+    And I set the "order_id" to "0"
     And I press the "Retrieve" button
     Then I should see the message "404 Not Found: Order with id '0' was not found."
     And the "customer_id" field should be empty
@@ -84,14 +84,14 @@ Feature: The orders service back-end
     And I select "Shipped" in the "item1_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
-    When I copy the "id" field
+    When I copy the "order_id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     And the "customer_id" field should be empty
     And the "item0_product_id" field should be empty
     And the "item0_quantity" field should be empty
     And the "item0_price" field should be empty
-    When I paste the "id" field
+    When I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "145" in the "customer_id" field
     And I should see "21" in the "item0_product_id" field
@@ -171,10 +171,10 @@ Feature: The orders service back-end
     And I set the "customer_id" to "103"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
-    When I copy the "id" field
+    When I copy the "order_id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
-    When I paste the "id" field
+    When I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "Placed" in the "item0_status" dropdown
     When I press the "cancel" button
@@ -186,10 +186,10 @@ Feature: The orders service back-end
     And I set the "customer_id" to "101"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
-    When I copy the "id" field
+    When I copy the "order_id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
-    When I paste the "id" field
+    When I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "Shipped" in the "item0_status" dropdown
     And I should see "Delivered" in the "item1_status" dropdown
@@ -201,10 +201,10 @@ Feature: The orders service back-end
     And I set the "customer_id" to "102"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
-    When I copy the "id" field
+    When I copy the "order_id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
-    When I paste the "id" field
+    When I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "Cancelled" in the "item0_status" dropdown
     When I press the "cancel" button
@@ -218,11 +218,11 @@ Feature: The orders service back-end
     And I should see order for customer_id "101" in the results
     And I should see order for customer_id "102" in the results
     And I should see order for customer_id "103" in the results
-    When I copy the "id" field
+    When I copy the "order_id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     And the "customer_id" field should be empty
-    When I paste the "id" field
+    When I paste the "order_id" field
     And I press the "Delete" button
     And I press the "List-All" button
     Then I should see the message "Success"
@@ -241,7 +241,7 @@ Feature: The orders service back-end
     When I press the "Reset-Form" button
     Then the "id" field should be empty
     And the "customer_id" field should be empty
-    When I set the "id" to "999"
+    When I set the "order_id" to "999"
     And I press the "Delete" button
     And I press the "List-All" button
     Then I should see the message "Success"
@@ -265,8 +265,8 @@ Feature: The orders service back-end
     And I select "Shipped" in the "item1_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
-    When I copy the "id" field
-    And I paste the "id" field
+    When I copy the "order_id" field
+    And I paste the "order_id" field
     And I press the "Deliver" button
     Then I should see "145" in the "customer_id" field
     And I should see "21" in the "item0_product_id" field
@@ -292,8 +292,8 @@ Feature: The orders service back-end
     And I select "Placed" in the "item1_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
-    When I copy the "id" field
-    And I paste the "id" field
+    When I copy the "order_id" field
+    And I paste the "order_id" field
     And I press the "Deliver" button
     Then I should see the message "At least one item in this order is PLACED, order cannot be delivered."
 
@@ -311,8 +311,8 @@ Feature: The orders service back-end
     And I select "Cancelled" in the "item1_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
-    When I copy the "id" field
-    And I paste the "id" field
+    When I copy the "order_id" field
+    And I paste the "order_id" field
     And I press the "Deliver" button
     Then I should see the message "All the items in this order are CANCELLED, no items can be delivered."
 
@@ -330,8 +330,8 @@ Feature: The orders service back-end
     And I select "Delivered" in the "item1_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
-    When I copy the "id" field
-    And I paste the "id" field
+    When I copy the "order_id" field
+    And I paste the "order_id" field
     And I press the "Deliver" button
     Then I should see "145" in the "customer_id" field
     And I should see "21" in the "item0_product_id" field
@@ -343,3 +343,66 @@ Feature: The orders service back-end
     And I should see "18" in the "item1_price" field
     And I should see "Delivered" in the "item1_status" dropdown
 
+
+  Scenario: Ship an Order with placed items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "103"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should see "Placed" in the "item0_status" dropdown
+    When I press the "ship" button
+    Then I should see the message "Success"
+    And I should see "Shipped" in the "item0_status" dropdown
+
+  Scenario: Ship an Order with some shipped and delivered items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "101"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should see "Shipped" in the "item0_status" dropdown
+    And I should see "Delivered" in the "item1_status" dropdown
+    When I press the "ship" button
+    Then I should see the message "Success"
+
+  Scenario: Ship an Order with all delivered items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "101"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    When I copy the "order_item0_item_id" field
+    And I paste the "item_id" field
+    And I press the "deliver-item" button
+    Then I should see "Delivered" in the "item0_status" dropdown
+    And I should see "Delivered" in the "item1_status" dropdown
+    When I press the "ship" button
+    Then I should see the message "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped."
+
+  Scenario: Ship an Order with all cancelled items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "102"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should see "Cancelled" in the "item0_status" dropdown
+    When I press the "ship" button
+    Then I should see the message "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped."
