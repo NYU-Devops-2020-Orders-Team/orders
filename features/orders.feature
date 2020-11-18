@@ -198,6 +198,24 @@ Feature: The orders service back-end
     And I should see "18" in the "item1_price" field
     And I should see "Delivered" in the "item1_status" dropdown
 
+  Scenario: Deliver order with placed delivered
+    When I visit the "Home Page"
+    And I set the "customer_id" to "145"
+    And I set the "item0_product_id" to "21"
+    And I set the "item0_quantity" to "5"
+    And I set the "item0_price" to "10.99"
+    And I select "Shipped" in the "item0_status" dropdown
+    And I press the "add-row" button
+    And I set the "item1_product_id" to "123"
+    And I set the "item1_quantity" to "1"
+    And I set the "item1_price" to "18"
+    And I select "Placed" in the "item1_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I copy the "id" field
+    And I paste the "id" field
+    And I press the "Deliver" button
+    Then I should see the message "At least one item in this order is PLACED, order cannot be delivered."
 
 
     
