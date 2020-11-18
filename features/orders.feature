@@ -403,3 +403,32 @@ Feature: The orders service back-end
     Then I should see "Cancelled" in the "item0_status" dropdown
     When I press the "ship" button
     Then I should see the message "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped."
+
+  Scenario: Update an Order
+    When I visit the "Home Page"
+    And I press the "List-All" button
+    Then I should see the message "Success"
+    And I should see order for customer_id "101" in the results
+    And I should see order for customer_id "102" in the results
+    And I should see order for customer_id "103" in the results
+    When I copy the "id" field
+    And I set the "customer_id" to "999"
+    And I press the "Update" button
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    And the "customer_id" field should be empty
+    When I paste the "id" field
+    And I press the "Retrieve" button
+    Then I should see "999" in the "customer_id" field
+
+  Scenario: Update an Order with incorrect Order ID
+    When I visit the "Home Page"
+    And I press the "List-All" button
+    Then I should see the message "Success"
+    And I should see order for customer_id "101" in the results
+    And I should see order for customer_id "102" in the results
+    And I should see order for customer_id "103" in the results
+    When I set the "id" to "0"
+    And I set the "customer_id" to "999"
+    And I press the "Update" button
+    Then I should see the message "404 Not Found: Order with id '0' was not found."
