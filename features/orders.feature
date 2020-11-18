@@ -166,7 +166,7 @@ Feature: The orders service back-end
     Then I should see the message "Invalid order: invalid status"
 
 
-Scenario: Cancel an Order with placed items
+  Scenario: Cancel an Order with placed items
     When I visit the "Home Page"
     And I set the "customer_id" to "103"
     And I press the "find-by-customer-id" button
@@ -181,7 +181,7 @@ Scenario: Cancel an Order with placed items
     Then I should see the message "Success"
     And I should see "Cancelled" in the "item0_status" dropdown
 
-Scenario: Cancel an Order with shipped/delivered items
+  Scenario: Cancel an Order with shipped/delivered items
     When I visit the "Home Page"
     And I set the "customer_id" to "101"
     And I press the "find-by-customer-id" button
@@ -196,7 +196,7 @@ Scenario: Cancel an Order with shipped/delivered items
     When I press the "cancel" button
     Then I should see the message "All the items have been shipped/delivered. Nothing to cancel"
 
-Scenario: Cancel an Order with cancelled items
+  Scenario: Cancel an Order with cancelled items
     When I visit the "Home Page"
     And I set the "customer_id" to "102"
     And I press the "find-by-customer-id" button
@@ -209,6 +209,8 @@ Scenario: Cancel an Order with cancelled items
     Then I should see "Cancelled" in the "item0_status" dropdown
     When I press the "cancel" button
     Then I should see the message "Success"
+
+
   Scenario: Delete an order by id
     When I visit the "Home Page"
     And I press the "List-All" button
