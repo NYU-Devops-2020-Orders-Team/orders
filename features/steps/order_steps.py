@@ -117,6 +117,13 @@ def step_impl(context, customer_id):
     ensure(customer_id in element.text, False, error_msg)
 
 
+@then('I should not see order for id "{id}" in the results')
+def step_impl(context, id):
+    element = context.driver.find_element_by_id('results')
+    error_msg = "I should not see '%s' in '%s'" % (id, element.text)
+    ensure(id in element.text, False, error_msg)
+
+
 @then('the "{element_name}" field should be empty')
 def step_impl(context, element_name):
     element_id = ID_PREFIX + element_name.lower()
