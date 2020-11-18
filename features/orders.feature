@@ -262,5 +262,4 @@ Feature: The orders service back-end
     And I should see "1" in the "item1_quantity" field
     And I should see "18" in the "item1_price" field
     And I should see "Delivered" in the "item1_status" dropdown
-    
-    
+
