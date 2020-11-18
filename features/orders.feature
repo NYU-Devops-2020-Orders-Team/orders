@@ -45,7 +45,8 @@ Feature: The orders service back-end
 
   Scenario: Read an order by id
     When I visit the "Home Page"
-    And I press the "List-All" button
+    And I set the "customer_id" to "101"
+    And I press the "find-by-customer-id" button
     And I copy the "id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
@@ -267,7 +268,9 @@ Feature: The orders service back-end
     And I press the "Create" button
     Then I should see the message "Success"
     When I copy the "id" field
+    And I press the "Reset-form" button
     And I paste the "id" field
+    And I press the "Retrieve" button
     And I press the "Deliver" button
     Then I should see "145" in the "customer_id" field
     And I should see "21" in the "item0_product_id" field
@@ -356,8 +359,7 @@ Feature: The orders service back-end
     When I paste the "id" field
     And I press the "Retrieve" button
     And I press the "ship" button
-    Then I should see the message "Success"
-    And I should see "Shipped" in the "item0_status" dropdown
+    Then I should see "Shipped" in the "item0_status" dropdown
 
   Scenario: Ship an Order with some shipped and delivered items
     When I visit the "Home Page"
