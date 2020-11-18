@@ -103,7 +103,6 @@ Feature: The orders service back-end
     And I should see "18" in the "item1_price" field
     And I should see "Shipped" in the "item1_status" dropdown
 
-
   Scenario: Create an Order for an invalid customer id
     When I visit the "Home Page"
     And I set the "customer_id" to "abc"
@@ -113,7 +112,6 @@ Feature: The orders service back-end
     And I select "Placed" in the "item0_status" dropdown
     And I press the "Create" button
     Then I should see the message "Customer Id must be integer"
-
 
   Scenario: Create an Order missing customer id
     When I visit the "Home Page"
@@ -125,13 +123,11 @@ Feature: The orders service back-end
     And I press the "Create" button
     Then I should see the message "Customer Id must be integer"
 
-
   Scenario: Create an Order missing order items
     When I visit the "Home Page"
     And I set the "customer_id" to "123"
     And I press the "Create" button
     Then I should see the message "Invalid order: invalid product ID"
-
 
   Scenario: Create an Order missing product id
     When I visit the "Home Page"
@@ -142,7 +138,6 @@ Feature: The orders service back-end
     And I press the "Create" button
     Then I should see the message "Invalid order: invalid product ID"
 
-
   Scenario: Create an Order missing quantity
     When I visit the "Home Page"
     And I set the "customer_id" to "123"
@@ -152,7 +147,6 @@ Feature: The orders service back-end
     And I press the "Create" button
     Then I should see the message "Invalid order: invalid quantity"
 
-  
   Scenario: Create an Order missing price
     When I visit the "Home Page"
     And I set the "customer_id" to "123"
@@ -170,6 +164,52 @@ Feature: The orders service back-end
     And I set the "item0_price" to "10.99"
     And I press the "Create" button
     Then I should see the message "Invalid order: invalid status"
+
+
+  Scenario: Cancel an Order with placed items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "103"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "id" field
+    And I press the "Retrieve" button
+    Then I should see "Placed" in the "item0_status" dropdown
+    When I press the "cancel" button
+    Then I should see the message "Success"
+    And I should see "Cancelled" in the "item0_status" dropdown
+
+  Scenario: Cancel an Order with shipped/delivered items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "101"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "id" field
+    And I press the "Retrieve" button
+    Then I should see "Shipped" in the "item0_status" dropdown
+    And I should see "Delivered" in the "item1_status" dropdown
+    When I press the "cancel" button
+    Then I should see the message "All the items have been shipped/delivered. Nothing to cancel"
+
+  Scenario: Cancel an Order with cancelled items
+    When I visit the "Home Page"
+    And I set the "customer_id" to "102"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    When I copy the "id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "id" field
+    And I press the "Retrieve" button
+    Then I should see "Cancelled" in the "item0_status" dropdown
+    When I press the "cancel" button
+    Then I should see the message "Success"
+
 
   Scenario: Delete an order by id
     When I visit the "Home Page"
