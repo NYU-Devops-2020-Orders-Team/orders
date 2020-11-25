@@ -232,11 +232,11 @@ $(function () {
     // ****************************************
     $("#ship-item-btn").click(function () {
         var order_id = parseInt($("#order_id").val());
-        var item_id = parseInt($("#item_id").val()); 
+        var order_item_id = parseInt($("#order_item_id").val()); 
 
         var ajax = $.ajax({
             type: "PUT",
-            url: "/orders/" + order_id + "/items/" + item_id + "/ship",
+            url: "/orders/" + order_id + "/items/" + order_item_id + "/ship",
             contentType: "application/json",
             data: ''
         })
@@ -250,11 +250,11 @@ $(function () {
     // ****************************************
     $("#deliver-item-btn").click(function () {
         var order_id = parseInt($("#order_id").val());
-        var item_id = parseInt($("#item_id").val()); 
+        var order_item_id = parseInt($("#order_item_id").val()); 
 
         var ajax = $.ajax({
             type: "PUT",
-            url: "/orders/" + order_id + "/items/" + item_id + "/deliver",
+            url: "/orders/" + order_id + "/items/" + order_item_id + "/deliver",
             contentType: "application/json",
             data: ''
         })
@@ -268,11 +268,11 @@ $(function () {
     // ****************************************
     $("#cancel-item-btn").click(function () {
         var order_id = parseInt($("#order_id").val());
-        var item_id = parseInt($("#item_id").val()); 
+        var order_item_id = parseInt($("#order_item_id").val()); 
 
         var ajax = $.ajax({
             type: "PUT",
-            url: "/orders/" + order_id + "/items/" + item_id + "/cancel",
+            url: "/orders/" + order_id + "/items/" + order_item_id + "/cancel",
             contentType: "application/json",
             data: ''
         })
@@ -350,7 +350,7 @@ $(function () {
     // ****************************************
     $("#update-item-btn").click(function () {
         var order_id = parseInt($("#order_id").val());
-        var item_id = parseInt($("#item_id").val());
+        var order_item_id = parseInt($("#order_item_id").val());
         var data = {
             "product_id": parseInt($("#order_item0_product_id").val()), 
             "quantity": parseInt($("#order_item0_quantity").val()), 
@@ -361,7 +361,7 @@ $(function () {
         for (var i = 0; i < row_num; i++) {
             var prefix = "#order_item" + i + "_";
             var id = parseInt($(prefix + "item_id").val());
-            if (id == item_id) {
+            if (id == order_item_id) {
                 data = {
                     "item_id": parseInt($(prefix + "item_id").val()), 
                     "product_id": parseInt($(prefix + "product_id").val()), 
@@ -375,7 +375,7 @@ $(function () {
 
         var ajax = $.ajax({
                 type: "PUT",
-                url: "/orders/" + order_id + "/items/" + item_id,
+                url: "/orders/" + order_id + "/items/" + order_item_id,
                 contentType: "application/json",
                 data: JSON.stringify(data)
             })
@@ -389,7 +389,7 @@ $(function () {
     // ****************************************
     $("#reset-form-btn").click(function () {
         $("#order_id").val("");
-        $("#item_id").val("");
+        $("#order_item_id").val("");
         reset_form_data()
     });
 
