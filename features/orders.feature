@@ -432,3 +432,67 @@ Feature: The orders service back-end
     And I set the "customer_id" to "999"
     And I press the "Update" button
     Then I should see the message "404 Not Found: Order with id '0' was not found."
+
+  Scenario: Deliver a shipped order item
+    When I visit the "Home Page"
+    And I set the "Customer ID" to "101"
+    And I press the "Find by Customer ID" button
+    Then I should see the message "Success"
+    And I should see "Shipped" in the "Item0 Status" dropdown
+    When I copy the "Item0 Item ID" field
+    and I paste the "Item ID" field
+    And I press the "Deliver Item" button
+    Then I should see the message "Success"
+    And I should see "Delivered" in the "Item0 Status" dropdown
+
+  Scenario: Deliver a placed order item
+    When I visit the "Home Page"
+    And I set the "Customer ID" to "103"
+    And I press the "Find by Customer ID" button
+    Then I should see the message "Success"
+    And I should see "Placed" in the "Item0 Status" dropdown
+    When I copy the "Item0 Item ID" field
+    and I paste the "Item ID" field
+    And I press the "Deliver Item" button
+    Then I should see the message "Item has not been shipped yet."
+  
+  Scenario: Deliver a cancelled order item
+    When I visit the "Home Page"
+    And I set the "Customer ID" to "102"
+    And I press the "Find by Customer ID" button
+    Then I should see the message "Success"
+    And I should see "Cancelled" in the "Item0 Status" dropdown
+    When I copy the "Item0 Item ID" field
+    and I paste the "Item ID" field
+    And I press the "Deliver Item" button
+    Then I should see the message "Item has already been cancelled."
+
+  Scenario: Deliver a delivered order item
+    When I visit the "Home Page"
+    And I set the "Customer ID" to "104"
+    And I press the "Find by Customer ID" button
+    Then I should see the message "Success"
+    And I should see "Delivered" in the "Item0 Status" dropdown
+    When I copy the "Item0 Item ID" field
+    and I paste the "Item ID" field
+    And I press the "Deliver Item" button
+    Then I should see the message "Item has already been delivered."
+
+  Scenario: Deliver an order item with a non-existing order ID
+    When I visit the "Home Page"
+    And I set the "ID" to "0"
+    And I set the "Item ID" to "0"
+    And I press the "Deliver Item" button
+    Then I should see the message "404 Not Found: Order with id '0' was not found."
+
+  Scenario: Deliver an order item with a non-existing order item ID
+    When I visit the "Home Page"
+    And I set the "Customer ID" to "101"
+    And I press the "Find by Customer ID" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Reset-Form" button
+    And I paste the "ID" field
+    And I set the "Item ID" to "0"
+    And I press the "Deliver Item" button
+    Then I should see the message "404 Not Found: Item with id '0' was not found inside order."
