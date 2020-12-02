@@ -496,3 +496,69 @@ Feature: The orders service back-end
     And I set the "Item_ID" to "0"
     And I press the "Deliver-Item" button
     Then I should see the message "404 Not Found: Item with id '0' was not found inside order."                               
+
+
+  Scenario: Ship a placed order item
+    When I visit the "Home Page"
+    And I set the "Customer_ID" to "103"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "Placed" in the "Item0_Status" dropdown
+    When I copy the "Item0_Item_ID" field
+    And I paste the "Item_ID" field
+    And I press the "Ship-Item" button
+    Then I should see the message "Success"
+    And I should see "Shipped" in the "Item0_Status" dropdown
+  
+  Scenario: Ship a shipped order item
+    When I visit the "Home Page"
+    And I set the "Customer_ID" to "101"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "Shipped" in the "Item0_Status" dropdown
+    When I copy the "Item0_Item_ID" field
+    And I paste the "Item_ID" field
+    And I press the "Ship-Item" button
+    Then I should see the message "Success"
+    And I should see "Shipped" in the "Item0_Status" dropdown
+
+  Scenario: Ship a cancelled order item
+    When I visit the "Home Page"
+    And I set the "Customer_ID" to "102"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "Cancelled" in the "Item0_Status" dropdown
+    When I copy the "Item0_Item_ID" field
+    And I paste the "Item_ID" field
+    And I press the "Ship-Item" button
+    Then I should see the message "Item has already been cancelled/delivered"
+
+  Scenario: Ship a delivered order item
+    When I visit the "Home Page"
+    And I set the "Customer_ID" to "104"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "Delivered" in the "Item0_Status" dropdown
+    When I copy the "Item0_Item_ID" field
+    And I paste the "Item_ID" field
+    And I press the "Ship-Item" button
+    Then I should see the message "Item has already been cancelled/delivered"
+
+  Scenario: Ship an order item with a non-existing order ID
+    When I visit the "Home Page"
+    And I set the "ID" to "0"
+    And I set the "Item_ID" to "0"
+    And I press the "Ship-Item" button
+    Then I should see the message "404 Not Found: Order with id '0' was not found."
+
+  Scenario: Ship an order item with a non-existing order item ID
+    When I visit the "Home Page"
+    And I set the "Customer_ID" to "101"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Reset-Form" button
+    And I paste the "ID" field
+    And I set the "Item_ID" to "0"
+    And I press the "Ship-Item" button
+    Then I should see the message "404 Not Found: Item with id '0' was not found inside order."                               
