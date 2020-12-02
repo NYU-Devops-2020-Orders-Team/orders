@@ -1,11 +1,20 @@
 """ Module to define the Rest APIs """
 from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
+from flask_restx import Api, Resource, fields, reqparse, inputs
 from werkzeug.exceptions import NotFound
 
 from .models import Order, OrderItem, DataValidationError
 from . import app
 
+# Document the type of autorization required
+authorizations = {
+    'apikey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'X-Api-Key'
+    }
+}
 
 ######################################################################
 # Error Handlers
@@ -78,14 +87,22 @@ def internal_server_error(error):
 def index():
     """ Root URL response """
     app.logger.info("Request for Root URL")
-    # return (
-    #     jsonify(
-    #         name="Orders REST API Service",
-    #         version="1.0"
-    #     ),
-    #     status.HTTP_200_OK,
-    # )
     return app.send_static_file('index.html')
+
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(app,
+          version='1.0.0',
+          title='Orders REST API Service',
+          description='This is the back end for an eCommerce web site as a RESTful microservice for the resource order.',
+          default='orders',
+          default_label='Orders operations',
+          doc='/apidocs', # default also could use doc='/apidocs/'
+          authorizations=authorizations,
+          prefix='/api'
+         )
 
 
 ######################################################################
