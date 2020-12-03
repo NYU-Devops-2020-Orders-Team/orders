@@ -1,4 +1,5 @@
 """ Module to define the Rest APIs """
+from functools import wraps
 from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from flask_restx import Api, Resource, fields, reqparse, inputs
@@ -15,6 +16,56 @@ authorizations = {
         'name': 'X-Api-Key'
     }
 }
+
+
+######################################################################
+# GET INDEX
+######################################################################
+@app.route('/')
+def index():
+    """ Root URL response """
+    app.logger.info("Request for Root URL")
+    return app.send_static_file('index.html')
+
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(app,
+          version='1.0.0',
+          title='Orders REST API Service',
+          description='This is the back end for an eCommerce web site as a RESTful microservice for the resource order.',
+          default='orders',
+          default_label='Orders operations',
+          doc='/apidocs', # default also could use doc='/apidocs/'
+          authorizations=authorizations,
+          prefix='/api'
+         )
+
+# Define the model so that the docs reflect what can be sent
+create_model = api.model('Order', {
+    'customer_id': fields.Integer(required=True,
+                          description='The customer id of the Order'),
+    'created_date': fields.DateTime(required=False,
+                          description='The created date of the Order'),
+    'order_items': fields.List(cls_or_instance=fields.ClassName, required=True,
+                              description='The items in the Order')
+})
+
+order_model = api.inherit(
+    'OrderModel', 
+    create_model,
+    {
+        'order_id': fields.Integer(readOnly=True,
+                            description='The unique id assigned internally by service'),
+    }
+)
+
+
+# query string arguments
+order_args = reqparse.RequestParser()
+order_args.add_argument('customer_id', type=int, required=True, help='List Orders by Customer id')
+
 
 ######################################################################
 # Error Handlers
@@ -81,28 +132,28 @@ def internal_server_error(error):
 
 
 ######################################################################
-# GET INDEX
+# Authorization Decorator
 ######################################################################
-@app.route('/')
-def index():
-    """ Root URL response """
-    app.logger.info("Request for Root URL")
-    return app.send_static_file('index.html')
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'X-Api-Key' in request.headers:
+            token = request.headers['X-Api-Key']
+
+        if app.config.get('API_KEY') and app.config['API_KEY'] == token:
+            return f(*args, **kwargs)
+        else:
+            return {'message': 'Invalid or missing token'}, 401
+    return decorated
 
 
 ######################################################################
-# Configure Swagger before initializing it
+# Function to generate a random API key (good for testing)
 ######################################################################
-api = Api(app,
-          version='1.0.0',
-          title='Orders REST API Service',
-          description='This is the back end for an eCommerce web site as a RESTful microservice for the resource order.',
-          default='orders',
-          default_label='Orders operations',
-          doc='/apidocs', # default also could use doc='/apidocs/'
-          authorizations=authorizations,
-          prefix='/api'
-         )
+def generate_apikey():
+    """ Helper function used when testing API keys """
+    return uuid.uuid4().hex
 
 
 ######################################################################
@@ -144,6 +195,45 @@ def list_orders():
 
 
 ######################################################################
+#  PATH: /orders/{id}
+######################################################################
+@api.route('/orders/<order_id>')
+@api.param('order_id', 'The Order identifier')
+class OrderResource(Resource):
+    """
+    OrderResource class
+    Allows the manipulation of a single Order
+    GET /order{id} - Returns an Order with the id
+    PUT /order{id} - Update an Order with the id
+    DELETE /order{id} -  Deletes an Order with the id
+    """
+
+    #------------------------------------------------------------------
+    # UPDATE AN EXISTING ORDER
+    #------------------------------------------------------------------
+    @api.doc('update_orders', security='apikey')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The posted Order data was not valid')
+    @api.expect(order_model)
+    @api.marshal_with(order_model)
+    @token_required
+    def put(self, order_id):
+        """
+        Update an Order
+        This endpoint will update an Order based the body that is posted
+        """
+        app.logger.info("Request to update order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
+        app.logger.debug('Payload = %s', api.payload)
+        data = api.payload
+        order.deserialize(data)
+        order.id = order_id
+        order.save()
+        return order.serialize(), status.HTTP_200_OK
+
+######################################################################
 # RETRIEVE AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["GET"])
@@ -160,27 +250,27 @@ def get_orders(order_id):
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
-######################################################################
-# UPDATE AN EXISTING ORDER
-######################################################################
-@app.route("/orders/<int:order_id>", methods=["PUT"])
-def update_orders(order_id):
-    """
-    Update an Order's customer_id
-    Since customer_id is the only field in the Order table that can be updated
-    This endpoint will update an Order based the body that is posted
-    """
-    app.logger.info("Request to update order with id: %s", order_id)
-    check_content_type("application/json")
-    new_customer_id = get_customer_id_from_request(request.get_json())
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    order.customer_id = new_customer_id
-    order.update()
+# ######################################################################
+# # UPDATE AN EXISTING ORDER
+# ######################################################################
+# @app.route("/orders/<int:order_id>", methods=["PUT"])
+# def update_orders(order_id):
+#     """
+#     Update an Order's customer_id
+#     Since customer_id is the only field in the Order table that can be updated
+#     This endpoint will update an Order based the body that is posted
+#     """
+#     app.logger.info("Request to update order with id: %s", order_id)
+#     check_content_type("application/json")
+#     new_customer_id = get_customer_id_from_request(request.get_json())
+#     order = Order.find(order_id)
+#     if not order:
+#         raise NotFound("Order with id '{}' was not found.".format(order_id))
+#     order.customer_id = new_customer_id
+#     order.update()
 
-    app.logger.info("Order with ID [%s] updated.", order_id)
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+#     app.logger.info("Order with ID [%s] updated.", order_id)
+#     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
 ######################################################################
