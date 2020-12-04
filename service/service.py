@@ -43,12 +43,34 @@ api = Api(app,
          )
 
 # Define the model so that the docs reflect what can be sent
+create_item_model = api.model('Item', {
+    'product_id': fields.Integer(required=True,
+                                 description='Product id of the item'),
+    'quantity': fields.Integer(required=True,
+                                description='Quantity of the item'),
+    'price': fields.Float(required=True,
+                                  description='Price of the item'),
+    'status': fields.String(required=True,
+                                description='Status of the item'),
+    'order_id': fields.Integer(required=True,
+                                description='Order id of the item')
+})
+
+item_model = api.inherit(
+    'ItemModel', 
+    create_item_model,
+    {
+        'item_id': fields.Integer(readOnly=True,
+                            description='The unique item id assigned internally by service'),
+    }
+)
+
 create_model = api.model('Order', {
     'customer_id': fields.Integer(required=True,
                           description='The customer id of the Order'),
     'created_date': fields.DateTime(required=False,
                           description='The created date of the Order'),
-    'order_items': fields.List(cls_or_instance=fields.ClassName, required=True,
+    'order_items': fields.List(fields.Nested(item_model, required=True), required=True,
                               description='The items in the Order')
 })
 
@@ -57,7 +79,7 @@ order_model = api.inherit(
     create_model,
     {
         'order_id': fields.Integer(readOnly=True,
-                            description='The unique id assigned internally by service'),
+                            description='The unique order id assigned internally by service'),
     }
 )
 
