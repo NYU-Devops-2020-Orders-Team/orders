@@ -1,21 +1,37 @@
+sudo: required
+
 language: python
 python:
   - "3.6"
 
-cache: pip
-install: "pip install -r requirements.txt"
+addons:
+  chrome: stable
 
 services:
   - postgresql
+
+cache: pip
+install:
+  - sudo apt-get install -y chromium-chromedriver python3-selenium
+  - pip install -r requirements.txt
 
 env:
   - DATABASE_URI=postgres://postgres:postgres@localhost:5432/testdb
 
 before_script:
   - psql -c "create database testdb;" -U postgres
+  - psql --version
+    - chromedriver --version
+    - gunicorn --log-level=info --bind=127.0.0.1:5000 service:app &
+    - sleep 5
+    - curl -I http://localhost:5000/
 
-script:
-  - nosetests
+jobs:
+  include:
+    - stage: tests
+      script: nosetests
+      after_success: codecov
+    - script: behave
 
 after_success:
   - codecov
