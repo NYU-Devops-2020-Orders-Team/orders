@@ -82,9 +82,6 @@ class TestOrderService(TestCase):
         """ Home Page """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        # data = resp.get_json()
-        # self.assertEqual(data["name"], "Orders REST API Service")
-        # self.assertEqual(data["version"], "1.0")
         self.assertIn(b'Order REST API Service', resp.data)
 
     def test_create_orders(self):
@@ -289,11 +286,10 @@ class TestOrderService(TestCase):
         """ Update an existing Order """
         # create an order to update
         test_order = self._create_orders(5)[0]
-
-        resp = self.app.put('/orders/{}'.format(test_order.id), json={'customer_id': 123},
+        order_factory = _get_order_factory_with_items(1)
+        resp = self.app.put('/orders/{}'.format(test_order.id), json=order_factory.serialize(),
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.get_json()["customer_id"], 123)
 
     def test_update_order_not_exists(self):
         """ Update an existing Order when the order does not exist """
@@ -309,13 +305,15 @@ class TestOrderService(TestCase):
 
     def test_update_order_customer_id_missing(self):
         """ Update an existing Order when customer_id is missing in request """
-        resp = self.app.put('/orders/{}'.format(0), json={},
+        test_order = self._create_orders(5)[0]
+        resp = self.app.put('/orders/{}'.format(test_order.id), json={},
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_order_customer_id_none(self):
-        """ Update an existing Order when customer_id is missing in request """
-        resp = self.app.put('/orders/{}'.format(0), json={'customer_id': None},
+        """ Update an existing Order when customer_id is None in request """
+        test_order = self._create_orders(5)[0]
+        resp = self.app.put('/orders/{}'.format(test_order.id), json={'customer_id': None},
                             content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
