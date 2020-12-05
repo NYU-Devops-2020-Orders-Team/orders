@@ -145,24 +145,6 @@ def internal_server_error(error):
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
-######################################################################
-# ADD A NEW ORDER
-######################################################################
-@app.route('/orders', methods=['POST'])
-def create_orders():
-    """
-    This endpoint will create an order based the data in the body that is posted
-    """
-    app.logger.info("Request to create an order")
-    check_content_type("application/json")
-    order = Order()
-    order.deserialize(request.get_json())
-    order.create()
-    message = order.serialize()
-    location_url = url_for('get_orders', order_id=order.id, _external=True)
-    app.logger.info('Created Order with id: {}'.format(order.id))
-    return make_response(jsonify(message), status.HTTP_201_CREATED, {"Location": location_url})
-
 
 ######################################################################
 # LIST ALL ORDERS
@@ -184,9 +166,39 @@ def list_orders():
 
 
 ######################################################################
+#  PATH: /orders
+######################################################################
+@api.route('/orders', strict_slashes=False)
+class OrderCollection(Resource):
+    """ Handles all interactions with collections of Wishlists """
+
+    # ------------------------------------------------------------------
+    # ADD A NEW ORDER
+    # ------------------------------------------------------------------
+    @api.doc('create_order')
+    @api.expect(create_model)
+    @api.response(400, 'Bad Request')
+    @api.response(201, 'Order created successfully')
+    @api.marshal_with(order_model, code=201)
+    def post(self):
+        """
+        This endpoint will create an order based the data in the body that is posted
+        """
+        app.logger.info("Request to create an order")
+        check_content_type("application/json")
+        order = Order()
+        order.deserialize(request.get_json())
+        order.create()
+        message = order.serialize()
+        location_url = url_for('get_orders', order_id=order.id, _external=True)
+        app.logger.info('Created Order with id: {}'.format(order.id))
+        return message, status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
 #  PATH: /orders/{id}
 ######################################################################
-@api.route('/orders/<int:order_id>', strict_slashes=False)
+@api.route("/orders/<int:order_id>", strict_slashes=False)
 @api.param('order_id', 'The Order identifier')
 class OrderResource(Resource):
     """
