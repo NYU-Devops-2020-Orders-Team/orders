@@ -1,4 +1,5 @@
 """ Module to define the Rest APIs """
+from functools import wraps
 from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from flask_restx import Api, Resource, fields, reqparse, inputs
@@ -7,14 +8,74 @@ from werkzeug.exceptions import NotFound
 from .models import Order, OrderItem, DataValidationError
 from . import app
 
-# Document the type of autorization required
-authorizations = {
-    'apikey': {
-        'type': 'apiKey',
-        'in': 'header',
-        'name': 'X-Api-Key'
-    }
-}
+
+######################################################################
+# GET INDEX
+######################################################################
+@app.route('/')
+def index():
+    """ Root URL response """
+    app.logger.info("Request for Root URL")
+    return app.send_static_file('index.html')
+
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(app,
+          version='1.0.0',
+          title='Orders REST API Service',
+          description='This is the back end for an eCommerce web site as a RESTful microservice for the resource order.',
+          default='orders',
+          default_label='Orders operations',
+          doc='/apidocs'
+          )
+
+# Define the model so that the docs reflect what can be sent
+create_item_model = api.model('Item', {
+    'product_id': fields.Integer(required=True,
+                                 description='Product id of the item'),
+    'quantity': fields.Integer(required=True,
+                               description='Quantity of the item'),
+    'price': fields.Float(required=True,
+                          description='Price of the item'),
+    'status': fields.String(required=True,
+                            description='Status of the item')
+})
+
+item_model = api.model('Item', {
+    'item_id': fields.Integer(readOnly=True,
+                              description='The unique item id assigned internally by service'),
+    'product_id': fields.Integer(required=True,
+                                 description='Product id of the item'),
+    'quantity': fields.Integer(required=True,
+                               description='Quantity of the item'),
+    'price': fields.Float(required=True,
+                          description='Price of the item'),
+    'status': fields.String(required=True,
+                            description='Status of the item')
+})
+
+create_model = api.model('Order', {
+    'customer_id': fields.Integer(required=True,
+                                  description='The customer id of the Order'),
+    'order_items': fields.List(fields.Nested(create_item_model, required=True), required=True,
+                               description='The items in the Order')
+})
+
+order_model = api.model('Order', {
+    'id': fields.Integer(required=True, description='The id for each order'),
+    'created_date': fields.DateTime(required=False, description='The date at which order was created'),
+    'customer_id': fields.Integer(required=True,
+                                  description='The customer id of the Order'),
+    'order_items': fields.List(fields.Nested(item_model, required=True), required=True,
+                               description='The items in the Order')
+})
+
+# query string arguments
+order_args = reqparse.RequestParser()
+order_args.add_argument('customer_id', type=int, required=True, help='List Orders by Customer id')
+
 
 ######################################################################
 # Error Handlers
@@ -79,32 +140,6 @@ def internal_server_error(error):
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
-
-######################################################################
-# GET INDEX
-######################################################################
-@app.route('/')
-def index():
-    """ Root URL response """
-    app.logger.info("Request for Root URL")
-    return app.send_static_file('index.html')
-
-
-######################################################################
-# Configure Swagger before initializing it
-######################################################################
-api = Api(app,
-          version='1.0.0',
-          title='Orders REST API Service',
-          description='This is the back end for an eCommerce web site as a RESTful microservice for the resource order.',
-          default='orders',
-          default_label='Orders operations',
-          doc='/apidocs', # default also could use doc='/apidocs/'
-          authorizations=authorizations,
-          prefix='/api'
-         )
-
-
 ######################################################################
 # ADD A NEW ORDER
 ######################################################################
@@ -119,7 +154,7 @@ def create_orders():
     order.deserialize(request.get_json())
     order.create()
     message = order.serialize()
-    location_url = url_for('get_orders', order_id=order.id, _external=True)
+    location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
     app.logger.info('Created Order with id: {}'.format(order.id))
     return make_response(jsonify(message), status.HTTP_201_CREATED, {"Location": location_url})
 
@@ -144,43 +179,62 @@ def list_orders():
 
 
 ######################################################################
-# RETRIEVE AN ORDER
+#  PATH: /orders/{id}
 ######################################################################
-@app.route("/orders/<int:order_id>", methods=["GET"])
-def get_orders(order_id):
+@api.route('/orders/<int:order_id>', strict_slashes=False)
+@api.param('order_id', 'The Order identifier')
+class OrderResource(Resource):
     """
-    Retrieve a single Order
-
-    This endpoint will return a Order based on it's id
+    OrderResource class
+    Allows the manipulation of a single Order
+    GET /order{id} - Returns an Order with the id
+    PUT /order{id} - Update an Order with the id
+    DELETE /order{id} -  Deletes an Order with the id
     """
-    app.logger.info("Request for order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+    #------------------------------------------------------------------
+    # RETRIEVE AN ORDER
+    #------------------------------------------------------------------
+    @api.doc('get_orders')
+    @api.response(404, 'Order not found')
+    @api.marshal_with(order_model)
+    def get(self, order_id):
+        """
+        Retrieve a single Order
+
+        This endpoint will return a Order based on it's id
+        """
+        app.logger.info("Request for order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            api.abort(status.HTTP_404_NOT_FOUND, "Orderr with id '{}' was not found.".format(order_id))
+        return order.serialize(), status.HTTP_200_OK
 
 
-######################################################################
-# UPDATE AN EXISTING ORDER
-######################################################################
-@app.route("/orders/<int:order_id>", methods=["PUT"])
-def update_orders(order_id):
-    """
-    Update an Order's customer_id
-    Since customer_id is the only field in the Order table that can be updated
-    This endpoint will update an Order based the body that is posted
-    """
-    app.logger.info("Request to update order with id: %s", order_id)
-    check_content_type("application/json")
-    new_customer_id = get_customer_id_from_request(request.get_json())
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    order.customer_id = new_customer_id
-    order.update()
-
-    app.logger.info("Order with ID [%s] updated.", order_id)
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+    # ------------------------------------------------------------------
+    # UPDATE AN EXISTING ORDER
+    # ------------------------------------------------------------------
+    @api.doc('update_orders')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The posted Order data was not valid')
+    @api.expect(order_model)
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """
+        Update an Order
+        This endpoint will update an Order based the body that is posted
+        """
+        app.logger.info("Request to update order with id: %s", order_id)
+        check_content_type("application/json")
+        order = Order.find(order_id)
+        if not order:
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
+        app.logger.debug('Payload = %s', api.payload)
+        data = api.payload
+        order.deserialize(data)
+        order.id = order_id
+        order.update()
+        return order.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
@@ -310,7 +364,8 @@ def ship_orders(order_id):
         elif order.order_items[i].status != "SHIPPED":
             order.order_items[i].status = "SHIPPED"
     if shipped_delivered_canceled_orders == len(order.order_items):
-        raise DataValidationError("All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
+        raise DataValidationError(
+            "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
     order.update()
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
@@ -343,9 +398,9 @@ def ship_item(order_id, item_id):
 ######################################################################
 @app.route("/orders/<int:order_id>/items/<int:item_id>/deliver", methods=["PUT"])
 def deliver_item(order_id, item_id):
-    """ 
+    """
     Change status of a single item in the Order to "DELIVERED".
-    The item has not been cancelled and has been shipped 
+    The item has not been cancelled and has been shipped
     """
     app.logger.info("Request to deliver item with id: %s in order with id: %s", item_id, order_id)
     order = Order.find(order_id)
@@ -367,6 +422,7 @@ def deliver_item(order_id, item_id):
 
     return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
+
 ######################################################################
 # DELIVER AN ORDER
 ######################################################################
@@ -383,7 +439,7 @@ def deliver_orders(order_id):
         if order.order_items[i].status == "PLACED":
             raise DataValidationError("At least one item in this order is PLACED, order cannot be delivered.")
         elif order.order_items[i].status == "CANCELLED":
-            cancelled_orders+=1
+            cancelled_orders += 1
         elif order.order_items[i].status != "DELIVERED":
             order.order_items[i].status = "DELIVERED"
     if cancelled_orders == len(order.order_items):
