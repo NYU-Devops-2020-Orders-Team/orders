@@ -207,7 +207,7 @@ class OrderResource(Resource):
         app.logger.info("Request for order with id: %s", order_id)
         order = Order.find(order_id)
         if not order:
-            api.abort(status.HTTP_404_NOT_FOUND, "Orderr with id '{}' was not found.".format(order_id))
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
         return order.serialize(), status.HTTP_200_OK
 
 
@@ -236,39 +236,55 @@ class OrderResource(Resource):
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
-
 ######################################################################
-# UPDATE AN EXISTING ORDER ITEM
+#  PATH: /orders/{order_id}/items/{item_id}
 ######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
-def update_order_items(order_id, item_id):
+@api.route('/orders/<int:order_id>/items/<int:item_id>', strict_slashes=False)
+@api.param('order_id', 'The Order identifier')
+@api.param('item_id', 'The Order Item identifier')
+class OrderItemResource(Resource):
     """
-    Update an Order Item
-    This endpoint will update an Order item based the body that is posted
+    OrderItemResource class
+    Allows the manipulation of a single Order Item
+    PUT /orders/{order_id}/items/{item_id} - Update an Order Item with the id
     """
-    app.logger.info("Request to update order with id: %s", order_id)
-    check_content_type("application/json")
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    order_item_found = False
 
-    new_order_item = OrderItem()
-    new_order_item.deserialize(request.get_json())
-    for i in range(len(order.order_items)):
-        if order.order_items[i].item_id == item_id:
-            order_item_found = True
-            order.order_items[i].product_id = new_order_item.product_id
-            order.order_items[i].quantity = new_order_item.quantity
-            order.order_items[i].price = new_order_item.price
-            order.order_items[i].status = new_order_item.status
-            break
+    # ------------------------------------------------------------------
+    # UPDATE AN EXISTING ORDER ITEM
+    # ------------------------------------------------------------------
+    @api.doc('update_order_items')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The posted Order data was not valid')
+    @api.expect(item_model)
+    @api.marshal_with(order_model)
+    def put(self, order_id, item_id):
+        """
+        Update an Order Item
+        This endpoint will update an Order item based the body that is posted
+        """
+        app.logger.info("Request to update order with id: %s", order_id)
+        check_content_type("application/json")
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
+        order_item_found = False
 
-    if not order_item_found:
-        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-    order.update()
-    app.logger.info("Order with ID [%s] updated.", order_id)
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+        new_order_item = OrderItem()
+        new_order_item.deserialize(request.get_json())
+        for i in range(len(order.order_items)):
+            if order.order_items[i].item_id == item_id:
+                order_item_found = True
+                order.order_items[i].product_id = new_order_item.product_id
+                order.order_items[i].quantity = new_order_item.quantity
+                order.order_items[i].price = new_order_item.price
+                order.order_items[i].status = new_order_item.status
+                break
+
+        if not order_item_found:
+            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+        order.update()
+        app.logger.info("Order with ID [%s] updated.", order_id)
+        return order.serialize(), status.HTTP_200_OK
 
 
 def get_customer_id_from_request(json):
