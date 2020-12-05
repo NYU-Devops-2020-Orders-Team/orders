@@ -63,6 +63,11 @@ create_model = api.model('Order', {
                                description='The items in the Order')
 })
 
+order_update_model = api.model('OrderUpdateModel', {
+    'customer_id': fields.Integer(required=True,
+                                  description='The customer id of the Order')
+})
+
 order_model = api.model('Order', {
     'id': fields.Integer(required=True, description='The id for each order'),
     'created_date': fields.DateTime(required=False, description='The date at which order was created'),
@@ -210,7 +215,7 @@ class OrderResource(Resource):
     @api.doc('update_orders')
     @api.response(404, 'Order not found')
     @api.response(400, 'The posted Order data was not valid')
-    @api.expect(order_model)
+    @api.expect(order_update_model)
     @api.marshal_with(order_model)
     def put(self, order_id):
         """
@@ -221,11 +226,8 @@ class OrderResource(Resource):
         check_content_type("application/json")
         order = Order.find(order_id)
         if not order:
-            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
-        app.logger.debug('Payload = %s', api.payload)
-        data = api.payload
-        order.deserialize(data)
-        order.id = order_id
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
+        order.customer_id = get_customer_id_from_request(api.payload)
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
