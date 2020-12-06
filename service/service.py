@@ -63,6 +63,11 @@ create_model = api.model('Order', {
                                description='The items in the Order')
 })
 
+order_update_model = api.model('OrderUpdateModel', {
+    'customer_id': fields.Integer(required=True,
+                                  description='The customer id of the Order')
+})
+
 order_model = api.model('Order', {
     'id': fields.Integer(required=True, description='The id for each order'),
     'created_date': fields.DateTime(required=False, description='The date at which order was created'),
@@ -115,7 +120,7 @@ def not_found(error):
 def method_not_supported(error):
     """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
     message = str(error)
-    app.logger.warning(message)
+    app.logger.warning(str(error))
     return (
         jsonify(
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -140,24 +145,6 @@ def internal_server_error(error):
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
-######################################################################
-# ADD A NEW ORDER
-######################################################################
-@app.route('/orders', methods=['POST'])
-def create_orders():
-    """
-    This endpoint will create an order based the data in the body that is posted
-    """
-    app.logger.info("Request to create an order")
-    check_content_type("application/json")
-    order = Order()
-    order.deserialize(request.get_json())
-    order.create()
-    message = order.serialize()
-    location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
-    app.logger.info('Created Order with id: {}'.format(order.id))
-    return make_response(jsonify(message), status.HTTP_201_CREATED, {"Location": location_url})
-
 
 ######################################################################
 # LIST ALL ORDERS
@@ -179,9 +166,39 @@ def list_orders():
 
 
 ######################################################################
+#  PATH: /orders
+######################################################################
+@api.route('/orders', strict_slashes=False)
+class OrderCollection(Resource):
+    """ Handles all interactions with collections of Wishlists """
+
+    # ------------------------------------------------------------------
+    # ADD A NEW ORDER
+    # ------------------------------------------------------------------
+    @api.doc('create_order')
+    @api.expect(create_model)
+    @api.response(400, 'Bad Request')
+    @api.response(201, 'Order created successfully')
+    @api.marshal_with(order_model, code=201)
+    def post(self):
+        """
+        This endpoint will create an order based the data in the body that is posted
+        """
+        app.logger.info("Request to create an order")
+        check_content_type("application/json")
+        order = Order()
+        order.deserialize(request.get_json())
+        order.create()
+        message = order.serialize()
+        location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
+        app.logger.info('Created Order with id: {}'.format(order.id))
+        return message, status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
 #  PATH: /orders/{id}
 ######################################################################
-@api.route('/orders/<int:order_id>', strict_slashes=False)
+@api.route("/orders/<int:order_id>", strict_slashes=False)
 @api.param('order_id', 'The Order identifier')
 class OrderResource(Resource):
     """
@@ -217,7 +234,7 @@ class OrderResource(Resource):
     @api.doc('update_orders')
     @api.response(404, 'Order not found')
     @api.response(400, 'The posted Order data was not valid')
-    @api.expect(order_model)
+    @api.expect(order_update_model)
     @api.marshal_with(order_model)
     def put(self, order_id):
         """
@@ -228,11 +245,8 @@ class OrderResource(Resource):
         check_content_type("application/json")
         order = Order.find(order_id)
         if not order:
-            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
-        app.logger.debug('Payload = %s', api.payload)
-        data = api.payload
-        order.deserialize(data)
-        order.id = order_id
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
+        order.customer_id = get_customer_id_from_request(api.payload)
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
