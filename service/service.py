@@ -79,7 +79,7 @@ order_model = api.model('Order', {
 
 # query string arguments
 order_args = reqparse.RequestParser()
-order_args.add_argument('customer_id', type=int, required=True, help='List Orders by Customer id')
+order_args.add_argument('customer_id', type=int, required=False, help='List Orders by Customer id')
 
 
 ######################################################################
@@ -116,21 +116,6 @@ def not_found(error):
     )
 
 
-@app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
-def method_not_supported(error):
-    """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            error="Method not Allowed",
-            message=message,
-        ),
-        status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
-
-
 @app.errorhandler(status.HTTP_500_INTERNAL_SERVER_ERROR)
 def internal_server_error(error):
     """ Handles unexpected server error with 500_SERVER_ERROR """
@@ -144,25 +129,6 @@ def internal_server_error(error):
         ),
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
-
-
-######################################################################
-# LIST ALL ORDERS
-######################################################################
-@app.route("/orders", methods=["GET"])
-def list_orders():
-    """ Returns all of the Orders """
-    app.logger.info("Request for order list")
-
-    customer_id = request.args.get("customer_id")
-    if customer_id:
-        orders = Order.find_by_customer_id(customer_id)
-    else:
-        orders = Order.all()
-
-    results = [order.serialize() for order in orders]
-    app.logger.info("Returning %d orders", len(results))
-    return make_response(jsonify(results), status.HTTP_200_OK)
 
 
 ######################################################################
@@ -193,6 +159,25 @@ class OrderCollection(Resource):
         location_url = url_for('get_orders', order_id=order.id, _external=True)
         app.logger.info('Created Order with id: {}'.format(order.id))
         return message, status.HTTP_201_CREATED, {"Location": location_url}
+
+    # ------------------------------------------------------------------
+    # LIST ALL ORDERS
+    # ------------------------------------------------------------------
+    @api.doc('list_orders')
+    @api.expect(order_args, validate=True)
+    @api.marshal_with(order_model, code=200)
+    def get(self):
+        """ Returns all of the Orders """
+        app.logger.info("Request for order list")
+        customer_id = request.args.get("customer_id")
+        if customer_id:
+            orders = Order.find_by_customer_id(customer_id)
+        else:
+            orders = Order.all()
+
+        results = [order.serialize() for order in orders]
+        app.logger.info("Returning %d orders", len(results))
+        return results, status.HTTP_200_OK
 
 
 ######################################################################
