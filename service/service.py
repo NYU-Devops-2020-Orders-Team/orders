@@ -156,7 +156,7 @@ class OrderCollection(Resource):
         order.deserialize(request.get_json())
         order.create()
         message = order.serialize()
-        location_url = url_for('get_orders', order_id=order.id, _external=True)
+        location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
         app.logger.info('Created Order with id: {}'.format(order.id))
         return message, status.HTTP_201_CREATED, {"Location": location_url}
 
@@ -194,6 +194,25 @@ class OrderResource(Resource):
     DELETE /order{id} -  Deletes an Order with the id
     """
 
+    #------------------------------------------------------------------
+    # RETRIEVE AN ORDER
+    #------------------------------------------------------------------
+    @api.doc('get_orders')
+    @api.response(404, 'Order not found')
+    @api.marshal_with(order_model)
+    def get(self, order_id):
+        """
+        Retrieve a single Order
+
+        This endpoint will return a Order based on it's id
+        """
+        app.logger.info("Request for order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            api.abort(status.HTTP_404_NOT_FOUND, "Orderr with id '{}' was not found.".format(order_id))
+        return order.serialize(), status.HTTP_200_OK
+
+
     # ------------------------------------------------------------------
     # UPDATE AN EXISTING ORDER
     # ------------------------------------------------------------------
@@ -215,23 +234,6 @@ class OrderResource(Resource):
         order.customer_id = get_customer_id_from_request(api.payload)
         order.update()
         return order.serialize(), status.HTTP_200_OK
-
-
-######################################################################
-# RETRIEVE AN ORDER
-######################################################################
-@app.route("/orders/<int:order_id>", methods=["GET"])
-def get_orders(order_id):
-    """
-    Retrieve a single Order
-
-    This endpoint will return a Order based on it's id
-    """
-    app.logger.info("Request for order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
 ######################################################################
