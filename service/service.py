@@ -344,50 +344,68 @@ def cancel_item(order_id, item_id):
 
 
 ######################################################################
-# SHIP AN ORDER
+# PATH: /orders/{order_id}/ship
 ######################################################################
-@app.route("/orders/<int:order_id>/ship", methods=["PUT"])
-def ship_orders(order_id):
-    """ Ship all the items of the Order that have not being shipped yet """
-    app.logger.info("Request to ship order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
+@api.route('/orders/<int:order_id>/ship')
+@api.param('order_id', 'The Order identifier')
+class ShipOrderResource(Resource):
+    """ Ship actions on an Order """
+    @api.doc('ship_orders')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The Order is not valid for ship')
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """ ship all the items of the Order that have not being shipped yet """
+        app.logger.info("Request to ship order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
 
-    shipped_delivered_canceled_orders = 0
-    for i in range(len(order.order_items)):
-        if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
-            shipped_delivered_canceled_orders += 1
-        elif order.order_items[i].status != "SHIPPED":
-            order.order_items[i].status = "SHIPPED"
-    if shipped_delivered_canceled_orders == len(order.order_items):
-        raise DataValidationError(
-            "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
-    order.update()
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
-
-
-######################################################################
-# SHIP AN ITEM IN AN ORDER
-######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>/ship", methods=["PUT"])
-def ship_item(order_id, item_id):
-    """ Ship a single item in the Order that have not being cancelled or delivered yet """
-    app.logger.info("Request to ship item with id: %s in order with id: %s", item_id, order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-
-    order_item = find_order_item(order.order_items, item_id)
-    if not order_item:
-        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-    if order_item.status in ["CANCELLED", "DELIVERED"]:
-        raise DataValidationError("Item has already been cancelled/delivered")
-    if order_item.status != "SHIPPED":
-        order_item.status = "SHIPPED"
+        shipped_delivered_canceled_orders = 0
+        for i in range(len(order.order_items)):
+            if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
+                shipped_delivered_canceled_orders += 1
+            elif order.order_items[i].status != "SHIPPED":
+                order.order_items[i].status = "SHIPPED"
+        if shipped_delivered_canceled_orders == len(order.order_items):
+            raise DataValidationError(
+                "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
         order.update()
+        return order.serialize(), status.HTTP_200_OK
 
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+
+######################################################################
+# PATH: /orders/{order_id}/items/{item_id}/ship
+######################################################################
+@api.route('/orders/<int:order_id>/items/<int:item_id>/ship')
+@api.param('order_id', 'The Order identifier')
+@api.param('item_id', 'The Order Item identifier')
+class ShipItemResource(Resource):
+    """ Ship actions on an Order Item """
+    @api.doc('ship_items')
+    @api.response(404, 'Order Item not found')
+    @api.response(400, 'The Order Item is not valid for ship')
+    @api.marshal_with(order_model)
+    def put(self, order_id, item_id):
+        """
+        Change status of a single item in the Order to "SHIPPED".
+        The item has not been cancelled or delivered and has been placed
+        """
+        app.logger.info("Request to ship item with id: %s in order with id: %s", item_id, order_id)
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+        order_item = find_order_item(order.order_items, item_id)
+        if not order_item:
+            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+        if order_item.status in ["CANCELLED", "DELIVERED"]:
+            raise DataValidationError("Item has already been cancelled/delivered")
+        if order_item.status != "SHIPPED":
+            order_item.status = "SHIPPED"
+            order.update()
+
+        return order.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
