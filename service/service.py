@@ -79,7 +79,7 @@ order_model = api.model('Order', {
 
 # query string arguments
 order_args = reqparse.RequestParser()
-order_args.add_argument('customer_id', type=int, required=True, help='List Orders by Customer id')
+order_args.add_argument('customer_id', type=int, required=False, help='List Orders by Customer id')
 
 
 ######################################################################
@@ -116,21 +116,6 @@ def not_found(error):
     )
 
 
-@app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
-def method_not_supported(error):
-    """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            error="Method not Allowed",
-            message=message,
-        ),
-        status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
-
-
 @app.errorhandler(status.HTTP_500_INTERNAL_SERVER_ERROR)
 def internal_server_error(error):
     """ Handles unexpected server error with 500_SERVER_ERROR """
@@ -144,25 +129,6 @@ def internal_server_error(error):
         ),
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
-
-
-######################################################################
-# LIST ALL ORDERS
-######################################################################
-@app.route("/orders", methods=["GET"])
-def list_orders():
-    """ Returns all of the Orders """
-    app.logger.info("Request for order list")
-
-    customer_id = request.args.get("customer_id")
-    if customer_id:
-        orders = Order.find_by_customer_id(customer_id)
-    else:
-        orders = Order.all()
-
-    results = [order.serialize() for order in orders]
-    app.logger.info("Returning %d orders", len(results))
-    return make_response(jsonify(results), status.HTTP_200_OK)
 
 
 ######################################################################
@@ -190,9 +156,28 @@ class OrderCollection(Resource):
         order.deserialize(request.get_json())
         order.create()
         message = order.serialize()
-        location_url = url_for('get_orders', order_id=order.id, _external=True)
+        location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
         app.logger.info('Created Order with id: {}'.format(order.id))
         return message, status.HTTP_201_CREATED, {"Location": location_url}
+
+    # ------------------------------------------------------------------
+    # LIST ALL ORDERS
+    # ------------------------------------------------------------------
+    @api.doc('list_orders')
+    @api.expect(order_args, validate=True)
+    @api.marshal_with(order_model, code=200)
+    def get(self):
+        """ Returns all of the Orders """
+        app.logger.info("Request for order list")
+        customer_id = request.args.get("customer_id")
+        if customer_id:
+            orders = Order.find_by_customer_id(customer_id)
+        else:
+            orders = Order.all()
+
+        results = [order.serialize() for order in orders]
+        app.logger.info("Returning %d orders", len(results))
+        return results, status.HTTP_200_OK
 
 
 ######################################################################
@@ -208,6 +193,25 @@ class OrderResource(Resource):
     PUT /order{id} - Update an Order with the id
     DELETE /order{id} -  Deletes an Order with the id
     """
+
+    #------------------------------------------------------------------
+    # RETRIEVE AN ORDER
+    #------------------------------------------------------------------
+    @api.doc('get_orders')
+    @api.response(404, 'Order not found')
+    @api.marshal_with(order_model)
+    def get(self, order_id):
+        """
+        Retrieve a single Order
+
+        This endpoint will return a Order based on it's id
+        """
+        app.logger.info("Request for order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            api.abort(status.HTTP_404_NOT_FOUND, "Orderr with id '{}' was not found.".format(order_id))
+        return order.serialize(), status.HTTP_200_OK
+
 
     # ------------------------------------------------------------------
     # UPDATE AN EXISTING ORDER
@@ -230,23 +234,6 @@ class OrderResource(Resource):
         order.customer_id = get_customer_id_from_request(api.payload)
         order.update()
         return order.serialize(), status.HTTP_200_OK
-
-
-######################################################################
-# RETRIEVE AN ORDER
-######################################################################
-@app.route("/orders/<int:order_id>", methods=["GET"])
-def get_orders(order_id):
-    """
-    Retrieve a single Order
-
-    This endpoint will return a Order based on it's id
-    """
-    app.logger.info("Request for order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
 
 
 ######################################################################
@@ -376,105 +363,138 @@ def cancel_item(order_id, item_id):
 
 
 ######################################################################
-# SHIP AN ORDER
+# PATH: /orders/{order_id}/ship
 ######################################################################
-@app.route("/orders/<int:order_id>/ship", methods=["PUT"])
-def ship_orders(order_id):
-    """ Ship all the items of the Order that have not being shipped yet """
-    app.logger.info("Request to ship order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
+@api.route('/orders/<int:order_id>/ship')
+@api.param('order_id', 'The Order identifier')
+class ShipOrderResource(Resource):
+    """ Ship actions on an Order """
+    @api.doc('ship_orders')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The Order is not valid for ship')
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """ ship all the items of the Order that have not being shipped yet """
+        app.logger.info("Request to ship order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
 
-    shipped_delivered_canceled_orders = 0
-    for i in range(len(order.order_items)):
-        if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
-            shipped_delivered_canceled_orders += 1
-        elif order.order_items[i].status != "SHIPPED":
-            order.order_items[i].status = "SHIPPED"
-    if shipped_delivered_canceled_orders == len(order.order_items):
-        raise DataValidationError(
-            "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
-    order.update()
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
-
-
-######################################################################
-# SHIP AN ITEM IN AN ORDER
-######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>/ship", methods=["PUT"])
-def ship_item(order_id, item_id):
-    """ Ship a single item in the Order that have not being cancelled or delivered yet """
-    app.logger.info("Request to ship item with id: %s in order with id: %s", item_id, order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-
-    order_item = find_order_item(order.order_items, item_id)
-    if not order_item:
-        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-    if order_item.status in ["CANCELLED", "DELIVERED"]:
-        raise DataValidationError("Item has already been cancelled/delivered")
-    if order_item.status != "SHIPPED":
-        order_item.status = "SHIPPED"
+        shipped_delivered_canceled_orders = 0
+        for i in range(len(order.order_items)):
+            if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
+                shipped_delivered_canceled_orders += 1
+            elif order.order_items[i].status != "SHIPPED":
+                order.order_items[i].status = "SHIPPED"
+        if shipped_delivered_canceled_orders == len(order.order_items):
+            raise DataValidationError(
+                "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
         order.update()
-
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+        return order.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
-# DELIVER AN ITEM IN AN ORDER
+# PATH: /orders/{order_id}/items/{item_id}/ship
 ######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>/deliver", methods=["PUT"])
-def deliver_item(order_id, item_id):
-    """
-    Change status of a single item in the Order to "DELIVERED".
-    The item has not been cancelled and has been shipped
-    """
-    app.logger.info("Request to deliver item with id: %s in order with id: %s", item_id, order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
+@api.route('/orders/<int:order_id>/items/<int:item_id>/ship')
+@api.param('order_id', 'The Order identifier')
+@api.param('item_id', 'The Order Item identifier')
+class ShipItemResource(Resource):
+    """ Ship actions on an Order Item """
+    @api.doc('ship_items')
+    @api.response(404, 'Order Item not found')
+    @api.response(400, 'The Order Item is not valid for ship')
+    @api.marshal_with(order_model)
+    def put(self, order_id, item_id):
+        """
+        Change status of a single item in the Order to "SHIPPED".
+        The item has not been cancelled or delivered and has been placed
+        """
+        app.logger.info("Request to ship item with id: %s in order with id: %s", item_id, order_id)
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
 
-    order_item = find_order_item(order.order_items, item_id)
-    if not order_item:
-        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-    if order_item.status == "PLACED":
-        raise DataValidationError("Item has not been shipped yet.")
-    if order_item.status == "CANCELLED":
-        raise DataValidationError("Item has already been cancelled.")
-    if order_item.status == "DELIVERED":
-        raise DataValidationError("Item has already been delivered.")
-    if order_item.status == "SHIPPED":
-        order_item.status = "DELIVERED"
+        order_item = find_order_item(order.order_items, item_id)
+        if not order_item:
+            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+        if order_item.status in ["CANCELLED", "DELIVERED"]:
+            raise DataValidationError("Item has already been cancelled/delivered")
+        if order_item.status != "SHIPPED":
+            order_item.status = "SHIPPED"
+            order.update()
+
+        return order.serialize(), status.HTTP_200_OK
+
+
+######################################################################
+#  PATH: /orders/{order_id}/items/{item_id}/deliver
+######################################################################
+@api.route('/orders/<int:order_id>/items/<int:item_id>/deliver')
+@api.param('order_id', 'The Order identifier')
+@api.param('item_id', 'The Order Item identifier')
+class DeliverItemResource(Resource):
+    """ Deliver actions on an Order Item """
+    @api.doc('deliver_items')
+    @api.response(404, 'Order Item not found')
+    @api.response(400, 'The Order Item is not valid for deliver')
+    @api.marshal_with(order_model)
+    def put(self, order_id, item_id):
+        """
+        Change status of a single item in the Order to "DELIVERED".
+        The item has not been cancelled and has been shipped
+        """
+        app.logger.info("Request to deliver item with id: %s in order with id: %s", item_id, order_id)
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+        order_item = find_order_item(order.order_items, item_id)
+        if not order_item:
+            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+        if order_item.status == "PLACED":
+            raise DataValidationError("Item has not been shipped yet.")
+        if order_item.status == "CANCELLED":
+            raise DataValidationError("Item has already been cancelled.")
+        if order_item.status == "DELIVERED":
+            raise DataValidationError("Item has already been delivered.")
+        if order_item.status == "SHIPPED":
+            order_item.status = "DELIVERED"
+            order.update()
+
+        return order.serialize(), status.HTTP_200_OK
+
+
+######################################################################
+#  PATH: /orders/{order_id}/deliver
+######################################################################
+@api.route('/orders/<int:order_id>/deliver')
+@api.param('order_id', 'The Order identifier')
+class DeliverOrderResource(Resource):
+    """ Deliver actions on an Order """
+    @api.doc('deliver_orders')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The Order is not valid for deliver')
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """ deliver all the items of the Order that have not being delivered yet """
+        app.logger.info("Request to deliver order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+            raise NotFound("Order with id '{}' was not found.".format(order_id))
+
+        cancelled_orders = 0
+        for i in range(len(order.order_items)):
+            if order.order_items[i].status == "PLACED":
+                raise DataValidationError("At least one item in this order is PLACED, order cannot be delivered.")
+            elif order.order_items[i].status == "CANCELLED":
+                cancelled_orders += 1
+            elif order.order_items[i].status != "DELIVERED":
+                order.order_items[i].status = "DELIVERED"
+        if cancelled_orders == len(order.order_items):
+            raise DataValidationError("All the items in this order are CANCELLED, no items can be delivered.")
         order.update()
-
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
-
-
-######################################################################
-# DELIVER AN ORDER
-######################################################################
-@app.route("/orders/<int:order_id>/deliver", methods=["PUT"])
-def deliver_orders(order_id):
-    """ deliver all the items of the Order that have not being delivered yet """
-    app.logger.info("Request to deliver order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-
-    cancelled_orders = 0
-    for i in range(len(order.order_items)):
-        if order.order_items[i].status == "PLACED":
-            raise DataValidationError("At least one item in this order is PLACED, order cannot be delivered.")
-        elif order.order_items[i].status == "CANCELLED":
-            cancelled_orders += 1
-        elif order.order_items[i].status != "DELIVERED":
-            order.order_items[i].status = "DELIVERED"
-    if cancelled_orders == len(order.order_items):
-        raise DataValidationError("All the items in this order are CANCELLED, no items can be delivered.")
-    order.update()
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+        return order.serialize(), status.HTTP_200_OK
 
 
 if __name__ == '__main__':
