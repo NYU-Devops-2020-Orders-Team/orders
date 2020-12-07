@@ -10,6 +10,7 @@ Feature: The orders service back-end
       | 102         | 4567,3,5.60,CANCELLED                       |
       | 103         | 7890,10,10,PLACED                           |
       | 104         | 1000,10,10,DELIVERED                        |
+      | 105         | 1,1,1,SHIPPED                               |
 
   Scenario: The Server is running
     When I visit the "Home Page"
@@ -44,8 +45,7 @@ Feature: The orders service back-end
 
   Scenario: Read an order by id
     When I visit the "Home Page"
-    And I set the "customer_id" to "101"
-    And I press the "find-by-customer-id" button
+    And I press the "List-All" button
     And I copy the "id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
@@ -53,7 +53,6 @@ Feature: The orders service back-end
     When I paste the "id" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-
 
   Scenario: Read an order for an invalid id
     When I visit the "Home Page"
@@ -250,30 +249,25 @@ Feature: The orders service back-end
     And I should not see order for id "9999999" in the results
 
 
-  Scenario: Deliver order with shipped 
+  Scenario: Deliver order with shipped
     When I visit the "Home Page"
-    And I set the "customer_id" to "145"
-    And I set the "item0_product_id" to "21"
-    And I set the "item0_quantity" to "5"
-    And I set the "item0_price" to "10.99"
-    And I select "Shipped" in the "item0_status" dropdown
-    And I press the "add-row" button
-    And I set the "item1_product_id" to "123"
-    And I set the "item1_quantity" to "1"
-    And I set the "item1_price" to "18"
-    And I select "Shipped" in the "item1_status" dropdown
-    And I press the "Create" button
+    And I set the "customer_id" to "105"
+    And I press the "find-by-customer-id" button
     Then I should see the message "Success"
+    And I should see "SHIPPED" in the results
     When I copy the "id" field
-    And I press the "Reset-form" button
-    And I paste the "id" field
+    And I press the "Reset-Form" button
+    Then the "id" field should be empty
+    When I paste the "id" field
     And I press the "Retrieve" button
-    And I press the "Deliver" button
+    And I press the "deliver" button
     Then I should see the message "Success"
-    When I set the "customer_id" to "145"
+    When I visit the "Home Page"
+    And I set the "customer_id" to "105"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
     And I should see "DELIVERED" in the results
+
 
   Scenario: Deliver order with placed and delivered
     When I visit the "Home Page"
@@ -455,7 +449,7 @@ Feature: The orders service back-end
     And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
     Then I should see the message "Item has not been shipped yet."
-  
+
   Scenario: Deliver a cancelled order item
     When I visit the "Home Page"
     And I set the "Customer_ID" to "102"
