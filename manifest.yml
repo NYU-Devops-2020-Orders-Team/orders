@@ -3,7 +3,7 @@ applications:
 - name: nyu-order-service-f20
   path: .
   instances: 1
-  memory: 64M
+  memory: 256M
   routes:
   - route: nyu-order-service-f20.us-south.cf.appdomain.cloud/
   disk_quota: 1024M
@@ -17,7 +17,7 @@ applications:
 - name: nyu-order-service-f20-dev
   path: .
   instances: 1
-  memory: 64M
+  memory: 256M
   routes:
   - route: nyu-order-service-f20-dev.us-south.cf.appdomain.cloud/
   disk_quota: 1024M
