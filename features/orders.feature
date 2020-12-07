@@ -43,24 +43,12 @@ Feature: The orders service back-end
     And I should not see order for customer_id "103" in the results
     And I should not see order for customer_id "101" in the results
 
-  Scenario: Read an order by id
-    When I visit the "Home Page"
-    And I press the "List-All" button
-    And I copy the "id" field
-    And I press the "Reset-Form" button
-    Then the "id" field should be empty
-    And the "customer_id" field should be empty
-    When I paste the "id" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-
   Scenario: Read an order for an invalid id
     When I visit the "Home Page"
     And I set the "id" to "0"
     And I press the "Retrieve" button
     Then I should see the message "Order was not found."
     And the "customer_id" field should be empty
-
 
   Scenario: Create an Order
     When I visit the "Home Page"
@@ -267,7 +255,6 @@ Feature: The orders service back-end
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
     And I should see "DELIVERED" in the results
-
 
   Scenario: Deliver order with placed and delivered
     When I visit the "Home Page"
