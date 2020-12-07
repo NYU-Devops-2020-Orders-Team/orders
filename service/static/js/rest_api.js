@@ -47,7 +47,7 @@ $(function () {
         var code = `<div class="form-group"> \
                     <div class="col-sm-2"></div> \
                     <div class="col-sm-2"> \
-                        <input type="text" class="form-control" id="${prefix}item_id" placeholder="Enter Item ID"> \
+                        <input type="text" class="form-control" id="${prefix}item_id" placeholder="Item ID" readonly> \
                     </div> \
                     <div class="col-sm-2"> \
                         <input type="text" class="form-control" id="${prefix}product_id" placeholder="Enter Product ID"> \

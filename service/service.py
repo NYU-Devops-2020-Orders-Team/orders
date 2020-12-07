@@ -1,8 +1,7 @@
 """ Module to define the Rest APIs """
-from functools import wraps
-from flask import jsonify, request, url_for, make_response, abort
+from flask import jsonify, request, make_response, abort
 from flask_api import status
-from flask_restx import Api, Resource, fields, reqparse, inputs
+from flask_restx import Api, Resource, fields, reqparse
 from werkzeug.exceptions import NotFound
 
 from .models import Order, OrderItem, DataValidationError
@@ -136,7 +135,7 @@ def internal_server_error(error):
 ######################################################################
 @api.route('/orders', strict_slashes=False)
 class OrderCollection(Resource):
-    """ Handles all interactions with collections of Wishlists """
+    """ Handles all interactions with collections of Orders """
 
     # ------------------------------------------------------------------
     # ADD A NEW ORDER
@@ -153,7 +152,11 @@ class OrderCollection(Resource):
         app.logger.info("Request to create an order")
         check_content_type("application/json")
         order = Order()
-        order.deserialize(request.get_json())
+        try:
+            order.deserialize(request.get_json())
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
+
         order.create()
         message = order.serialize()
         location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
@@ -194,9 +197,9 @@ class OrderResource(Resource):
     DELETE /order{id} -  Deletes an Order with the id
     """
 
-    #------------------------------------------------------------------
+    # ------------------------------------------------------------------
     # RETRIEVE AN ORDER
-    #------------------------------------------------------------------
+    # ------------------------------------------------------------------
     @api.doc('get_orders')
     @api.response(404, 'Order not found')
     @api.marshal_with(order_model)
@@ -209,9 +212,8 @@ class OrderResource(Resource):
         app.logger.info("Request for order with id: %s", order_id)
         order = Order.find(order_id)
         if not order:
-            api.abort(status.HTTP_404_NOT_FOUND, "Orderr with id '{}' was not found.".format(order_id))
+            api.abort(status.HTTP_404_NOT_FOUND, "Order was not found.")
         return order.serialize(), status.HTTP_200_OK
-
 
     # ------------------------------------------------------------------
     # UPDATE AN EXISTING ORDER
@@ -230,44 +232,61 @@ class OrderResource(Resource):
         check_content_type("application/json")
         order = Order.find(order_id)
         if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
         order.customer_id = get_customer_id_from_request(api.payload)
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
-# UPDATE AN EXISTING ORDER ITEM
+#  PATH: /orders/{order_id}/items/{item_id}
 ######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
-def update_order_items(order_id, item_id):
+@api.route('/orders/<int:order_id>/items/<int:item_id>', strict_slashes=False)
+@api.param('order_id', 'The Order identifier')
+@api.param('item_id', 'The Order Item identifier')
+class OrderItemResource(Resource):
     """
-    Update an Order Item
-    This endpoint will update an Order item based the body that is posted
+    OrderItemResource class
+    Allows the manipulation of a single Order Item
+    PUT /orders/{order_id}/items/{item_id} - Update an Order Item with the id
     """
-    app.logger.info("Request to update order with id: %s", order_id)
-    check_content_type("application/json")
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    order_item_found = False
 
-    new_order_item = OrderItem()
-    new_order_item.deserialize(request.get_json())
-    for i in range(len(order.order_items)):
-        if order.order_items[i].item_id == item_id:
-            order_item_found = True
-            order.order_items[i].product_id = new_order_item.product_id
-            order.order_items[i].quantity = new_order_item.quantity
-            order.order_items[i].price = new_order_item.price
-            order.order_items[i].status = new_order_item.status
-            break
+    # ------------------------------------------------------------------
+    # UPDATE AN EXISTING ORDER ITEM
+    # ------------------------------------------------------------------
+    @api.doc('update_order_items')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The posted Order data was not valid')
+    @api.expect(item_model)
+    @api.marshal_with(order_model)
+    def put(self, order_id, item_id):
+        """
+        Update an Order Item
+        This endpoint will update an Order item based the body that is posted
+        """
+        app.logger.info("Request to update order with id: %s", order_id)
+        check_content_type("application/json")
+        order = Order.find(order_id)
+        if not order:
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
+        order_item_found = False
 
-    if not order_item_found:
-        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-    order.update()
-    app.logger.info("Order with ID [%s] updated.", order_id)
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+        new_order_item = OrderItem()
+        new_order_item.deserialize(request.get_json())
+        for i in range(len(order.order_items)):
+            if order.order_items[i].item_id == item_id:
+                order_item_found = True
+                order.order_items[i].product_id = new_order_item.product_id
+                order.order_items[i].quantity = new_order_item.quantity
+                order.order_items[i].price = new_order_item.price
+                order.order_items[i].status = new_order_item.status
+                break
+
+        if not order_item_found:
+            api.abort(status.HTTP_404_NOT_FOUND, "Item with id '{}' was not found inside order.".format(item_id))
+        order.update()
+        app.logger.info("Order with ID [%s] updated.", order_id)
+        return order.serialize(), status.HTTP_200_OK
 
 
 def get_customer_id_from_request(json):
@@ -315,16 +334,19 @@ class CancelOrderResource(Resource):
         app.logger.info("Request to cancel order with id: %s", order_id)
         order = Order.find(order_id)
         if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
+             api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
 
         shipped_or_delivered_orders = 0
-        for order_item in order.order_items:
-            if order_item.status in ["DELIVERED", "SHIPPED"]:
-                shipped_or_delivered_orders += 1
-            elif order_item.status != "CANCELLED":
-                order_item.status = "CANCELLED"
-        if shipped_or_delivered_orders == len(order.order_items):
-            raise DataValidationError("All the items have been shipped/delivered. Nothing to cancel")
+        try: 
+            for order_item in order.order_items:
+                if order_item.status in ["DELIVERED", "SHIPPED"]:
+                    shipped_or_delivered_orders += 1
+                elif order_item.status != "CANCELLED":
+                    order_item.status = "CANCELLED"
+                if shipped_or_delivered_orders == len(order.order_items):
+                    raise DataValidationError("All the items have been shipped/delivered. Nothing to cancel")
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
@@ -344,20 +366,18 @@ class CancelItemResource(Resource):
     def put(self, order_id, item_id):
         """ Cancel a single item in the Order that have not being shipped yet """
         app.logger.info("Request to cancel item with id: %s in order with id: %s", item_id, order_id)
-        order = Order.find(order_id)
-        if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
-
-        order_item = find_order_item(order.order_items, item_id)
-        if not order_item:
-            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-        if order_item.status in ["DELIVERED", "SHIPPED"]:
-            raise DataValidationError("Item has already been shipped/delivered")
-        if order_item.status != "CANCELLED":
-            order_item.status = "CANCELLED"
-            order.update()
-
-        return order.serialize(), status.HTTP_200_OK
+        try:
+            order, order_item = get_order_and_order_item(order_id, item_id)
+            if order_item.status in ["DELIVERED", "SHIPPED"]:
+                raise DataValidationError("Item has already been shipped/delivered")
+            if order_item.status != "CANCELLED":
+                order_item.status = "CANCELLED"
+                order.update()
+            return order.serialize(), status.HTTP_200_OK
+        except NotFound as notFound:
+            api.abort(status.HTTP_404_NOT_FOUND, notFound)
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
 
 
 ######################################################################
@@ -367,6 +387,7 @@ class CancelItemResource(Resource):
 @api.param('order_id', 'The Order identifier')
 class ShipOrderResource(Resource):
     """ Ship actions on an Order """
+
     @api.doc('ship_orders')
     @api.response(404, 'Order not found')
     @api.response(400, 'The Order is not valid for ship')
@@ -376,17 +397,19 @@ class ShipOrderResource(Resource):
         app.logger.info("Request to ship order with id: %s", order_id)
         order = Order.find(order_id)
         if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
-
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
         shipped_delivered_canceled_orders = 0
-        for i in range(len(order.order_items)):
-            if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
-                shipped_delivered_canceled_orders += 1
-            elif order.order_items[i].status != "SHIPPED":
-                order.order_items[i].status = "SHIPPED"
-        if shipped_delivered_canceled_orders == len(order.order_items):
-            raise DataValidationError(
-                "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
+        try:
+            for i in range(len(order.order_items)):
+                if order.order_items[i].status in ["DELIVERED", "CANCELLED"]:
+                    shipped_delivered_canceled_orders += 1
+                elif order.order_items[i].status != "SHIPPED":
+                    order.order_items[i].status = "SHIPPED"
+            if shipped_delivered_canceled_orders == len(order.order_items):
+                raise DataValidationError(
+                    "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped.")
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
@@ -399,6 +422,7 @@ class ShipOrderResource(Resource):
 @api.param('item_id', 'The Order Item identifier')
 class ShipItemResource(Resource):
     """ Ship actions on an Order Item """
+
     @api.doc('ship_items')
     @api.response(404, 'Order Item not found')
     @api.response(400, 'The Order Item is not valid for ship')
@@ -409,20 +433,18 @@ class ShipItemResource(Resource):
         The item has not been cancelled or delivered and has been placed
         """
         app.logger.info("Request to ship item with id: %s in order with id: %s", item_id, order_id)
-        order = Order.find(order_id)
-        if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
-
-        order_item = find_order_item(order.order_items, item_id)
-        if not order_item:
-            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-        if order_item.status in ["CANCELLED", "DELIVERED"]:
-            raise DataValidationError("Item has already been cancelled/delivered")
-        if order_item.status != "SHIPPED":
-            order_item.status = "SHIPPED"
-            order.update()
-
-        return order.serialize(), status.HTTP_200_OK
+        try:
+            order, order_item = get_order_and_order_item(order_id, item_id)
+            if order_item.status in ["CANCELLED", "DELIVERED"]:
+                raise DataValidationError("Item has already been cancelled/delivered")
+            if order_item.status != "SHIPPED":
+                order_item.status = "SHIPPED"
+                order.update()
+            return order.serialize(), status.HTTP_200_OK
+        except NotFound as notFound:
+            api.abort(status.HTTP_404_NOT_FOUND, notFound)
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
 
 
 ######################################################################
@@ -433,6 +455,7 @@ class ShipItemResource(Resource):
 @api.param('item_id', 'The Order Item identifier')
 class DeliverItemResource(Resource):
     """ Deliver actions on an Order Item """
+
     @api.doc('deliver_items')
     @api.response(404, 'Order Item not found')
     @api.response(400, 'The Order Item is not valid for deliver')
@@ -443,24 +466,32 @@ class DeliverItemResource(Resource):
         The item has not been cancelled and has been shipped
         """
         app.logger.info("Request to deliver item with id: %s in order with id: %s", item_id, order_id)
-        order = Order.find(order_id)
-        if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
+        try:
+            order, order_item = get_order_and_order_item(order_id, item_id)
+            if order_item.status == "PLACED":
+                raise DataValidationError("Item has not been shipped yet.")
+            if order_item.status == "CANCELLED":
+                raise DataValidationError("Item has already been cancelled.")
+            if order_item.status == "DELIVERED":
+                raise DataValidationError("Item has already been delivered.")
+            if order_item.status == "SHIPPED":
+                order_item.status = "DELIVERED"
+                order.update()
+            return order.serialize(), status.HTTP_200_OK
+        except NotFound as notFound:
+            api.abort(status.HTTP_404_NOT_FOUND, notFound)
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
 
-        order_item = find_order_item(order.order_items, item_id)
-        if not order_item:
-            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-        if order_item.status == "PLACED":
-            raise DataValidationError("Item has not been shipped yet.")
-        if order_item.status == "CANCELLED":
-            raise DataValidationError("Item has already been cancelled.")
-        if order_item.status == "DELIVERED":
-            raise DataValidationError("Item has already been delivered.")
-        if order_item.status == "SHIPPED":
-            order_item.status = "DELIVERED"
-            order.update()
 
-        return order.serialize(), status.HTTP_200_OK
+def get_order_and_order_item(order_id, item_id):
+    order = Order.find(order_id)
+    if not order:
+        raise NotFound("Order with id '{}' was not found.".format(order_id))
+    order_item = find_order_item(order.order_items, item_id)
+    if not order_item:
+        raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
+    return order, order_item
 
 
 ######################################################################
@@ -470,6 +501,7 @@ class DeliverItemResource(Resource):
 @api.param('order_id', 'The Order identifier')
 class DeliverOrderResource(Resource):
     """ Deliver actions on an Order """
+
     @api.doc('deliver_orders')
     @api.response(404, 'Order not found')
     @api.response(400, 'The Order is not valid for deliver')
@@ -479,18 +511,21 @@ class DeliverOrderResource(Resource):
         app.logger.info("Request to deliver order with id: %s", order_id)
         order = Order.find(order_id)
         if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
 
         cancelled_orders = 0
-        for i in range(len(order.order_items)):
-            if order.order_items[i].status == "PLACED":
-                raise DataValidationError("At least one item in this order is PLACED, order cannot be delivered.")
-            elif order.order_items[i].status == "CANCELLED":
-                cancelled_orders += 1
-            elif order.order_items[i].status != "DELIVERED":
-                order.order_items[i].status = "DELIVERED"
-        if cancelled_orders == len(order.order_items):
-            raise DataValidationError("All the items in this order are CANCELLED, no items can be delivered.")
+        try:
+            for i in range(len(order.order_items)):
+                if order.order_items[i].status == "PLACED":
+                    raise DataValidationError("At least one item in this order is PLACED, order cannot be delivered.")
+                elif order.order_items[i].status == "CANCELLED":
+                    cancelled_orders += 1
+                elif order.order_items[i].status != "DELIVERED":
+                    order.order_items[i].status = "DELIVERED"
+            if cancelled_orders == len(order.order_items):
+                raise DataValidationError("All the items in this order are CANCELLED, no items can be delivered.")
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
