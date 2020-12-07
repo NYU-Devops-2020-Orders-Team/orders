@@ -68,7 +68,7 @@ Feature: The orders service back-end
     When I visit the "Home Page"
     And I set the "id" to "0"
     And I press the "Retrieve" button
-    Then I should see the message "404 Not Found: Order with id '0' was not found."
+    Then I should see the message "Order with id '0' was not found."
     And the "customer_id" field should be empty
 
 
@@ -173,29 +173,32 @@ Feature: The orders service back-end
     And I set the "customer_id" to "103"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
+    And I should see "PLACED" in the results
     When I copy the "id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     When I paste the "id" field
     And I press the "Retrieve" button
-    Then I should see "Placed" in the "item0_status" dropdown
     When I press the "cancel" button
     Then I should see the message "Success"
-    And I should see "Cancelled" in the "item0_status" dropdown
+    When I set the "customer_id" to "103"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    And I should see "CANCELLED" in the results
 
   Scenario: Cancel an Order with shipped/delivered items
     When I visit the "Home Page"
     And I set the "customer_id" to "101"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
+    And I should see "SHIPPED" in the results
+    And I should see "DELIVERED" in the results
     When I copy the "id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     When I paste the "id" field
     And I press the "Retrieve" button
-    Then I should see "Shipped" in the "item0_status" dropdown
-    And I should see "Delivered" in the "item1_status" dropdown
-    When I press the "cancel" button
+    And I press the "cancel" button
     Then I should see the message "All the items have been shipped/delivered. Nothing to cancel"
 
   Scenario: Cancel an Order with cancelled items
@@ -203,13 +206,13 @@ Feature: The orders service back-end
     And I set the "customer_id" to "102"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
+    And I should see "CANCELLED" in the results
     When I copy the "id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     When I paste the "id" field
     And I press the "Retrieve" button
-    Then I should see "Cancelled" in the "item0_status" dropdown
-    When I press the "cancel" button
+    And I press the "cancel" button
     Then I should see the message "Success"
 
 
@@ -272,15 +275,11 @@ Feature: The orders service back-end
     And I paste the "id" field
     And I press the "Retrieve" button
     And I press the "Deliver" button
-    Then I should see "145" in the "customer_id" field
-    And I should see "21" in the "item0_product_id" field
-    And I should see "5" in the "item0_quantity" field
-    And I should see "10.99" in the "item0_price" field
-    And I should see "Delivered" in the "item0_status" dropdown
-    And I should see "123" in the "item1_product_id" field
-    And I should see "1" in the "item1_quantity" field
-    And I should see "18" in the "item1_price" field
-    And I should see "Delivered" in the "item1_status" dropdown
+    Then I should see the message "Success"
+    When I set the "customer_id" to "145"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    And I should see "DELIVERED" in the results
 
   Scenario: Deliver order with placed and delivered
     When I visit the "Home Page"
@@ -359,7 +358,11 @@ Feature: The orders service back-end
     When I paste the "id" field
     And I press the "Retrieve" button
     And I press the "ship" button
-    Then I should see "Shipped" in the "item0_status" dropdown
+    And I press the "Reset-Form" button
+    And I set the "customer_id" to "103"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    And I should see "SHIPPED" in the results
 
   Scenario: Ship an Order with some shipped and delivered items
     When I visit the "Home Page"
@@ -371,8 +374,8 @@ Feature: The orders service back-end
     Then the "id" field should be empty
     When I paste the "id" field
     And I press the "Retrieve" button
-    Then I should see "Shipped" in the "item0_status" dropdown
-    And I should see "Delivered" in the "item1_status" dropdown
+    Then I should see "SHIPPED" in the results
+    And I should see "DELIVERED" in the results
     When I press the "ship" button
     Then I should see the message "Success"
 
@@ -395,13 +398,12 @@ Feature: The orders service back-end
     And I set the "customer_id" to "102"
     And I press the "find-by-customer-id" button
     Then I should see the message "Success"
+    And I should see "CANCELLED" in the results
     When I copy the "id" field
     And I press the "Reset-Form" button
     Then the "id" field should be empty
     When I paste the "id" field
-    And I press the "Retrieve" button
-    Then I should see "Cancelled" in the "item0_status" dropdown
-    When I press the "ship" button
+    And I press the "Ship" button
     Then I should see the message "All the items in this order are DELIVERED/SHIPPED/CANCELED, no items can be shipped."
 
   Scenario: Update an Order
@@ -431,26 +433,30 @@ Feature: The orders service back-end
     When I set the "id" to "0"
     And I set the "customer_id" to "999"
     And I press the "Update" button
-    Then I should see the message "404 Not Found: Order with id '0' was not found."
+    Then I should see the message "Order with id '0' was not found."
 
   Scenario: Deliver a shipped order item
     When I visit the "Home Page"
     And I set the "Customer_ID" to "101"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Shipped" in the "Item0_Status" dropdown
+    And I should see "SHIPPED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
     Then I should see the message "Success"
-    And I should see "Delivered" in the "Item0_Status" dropdown
+    When I press the "Reset-Form" button
+    And I set the "Customer_ID" to "101"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "DELIVERED" in the results
 
   Scenario: Deliver a placed order item
     When I visit the "Home Page"
     And I set the "Customer_ID" to "103"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Placed" in the "Item0_Status" dropdown
+    And I should see "PLACED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
@@ -461,7 +467,7 @@ Feature: The orders service back-end
     And I set the "Customer_ID" to "102"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Cancelled" in the "Item0_Status" dropdown
+    And I should see "CANCELLED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
@@ -472,7 +478,7 @@ Feature: The orders service back-end
     And I set the "Customer_ID" to "104"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Delivered" in the "Item0_Status" dropdown
+    And I should see "DELIVERED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
@@ -483,7 +489,7 @@ Feature: The orders service back-end
     And I set the "ID" to "0"
     And I set the "Item_ID" to "0"
     And I press the "Deliver-Item" button
-    Then I should see the message "404 Not Found: Order with id '0' was not found."
+    Then I should see the message "Order with id '0' was not found."
 
   Scenario: Deliver an order item with a non-existing order item ID
     When I visit the "Home Page"
@@ -495,7 +501,7 @@ Feature: The orders service back-end
     And I paste the "ID" field
     And I set the "Item_ID" to "0"
     And I press the "Deliver-Item" button
-    Then I should see the message "404 Not Found: Item with id '0' was not found inside order."                               
+    Then I should see the message "Item with id '0' was not found inside order."
 
 
   Scenario: Ship a placed order item
@@ -503,13 +509,17 @@ Feature: The orders service back-end
     And I set the "Customer_ID" to "103"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Placed" in the "Item0_Status" dropdown
+    And I should see "PLACED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Ship-Item" button
     Then I should see the message "Success"
-    And I should see "Shipped" in the "Item0_Status" dropdown
-  
+    When I press the "Reset-Form" button
+    And I set the "Customer_ID" to "103"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "SHIPPED" in the results
+
   Scenario: Ship a shipped order item
     When I visit the "Home Page"
     And I set the "Customer_ID" to "101"
@@ -520,14 +530,17 @@ Feature: The orders service back-end
     And I paste the "Item_ID" field
     And I press the "Ship-Item" button
     Then I should see the message "Success"
-    And I should see "Shipped" in the "Item0_Status" dropdown
+    When I set the "Customer_ID" to "101"
+    And I press the "Find-by-Customer-ID" button
+    Then I should see the message "Success"
+    And I should see "SHIPPED" in the results
 
   Scenario: Ship a cancelled order item
     When I visit the "Home Page"
     And I set the "Customer_ID" to "102"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Cancelled" in the "Item0_Status" dropdown
+    And I should see "CANCELLED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Ship-Item" button
@@ -538,7 +551,7 @@ Feature: The orders service back-end
     And I set the "Customer_ID" to "104"
     And I press the "Find-by-Customer-ID" button
     Then I should see the message "Success"
-    And I should see "Delivered" in the "Item0_Status" dropdown
+    And I should see "DELIVERED" in the results
     When I copy the "Item0_Item_ID" field
     And I paste the "Item_ID" field
     And I press the "Ship-Item" button
@@ -549,7 +562,7 @@ Feature: The orders service back-end
     And I set the "ID" to "0"
     And I set the "Item_ID" to "0"
     And I press the "Ship-Item" button
-    Then I should see the message "404 Not Found: Order with id '0' was not found."
+    Then I should see the message "Order with id '0' was not found."
 
   Scenario: Ship an order item with a non-existing order item ID
     When I visit the "Home Page"
@@ -561,4 +574,4 @@ Feature: The orders service back-end
     And I paste the "ID" field
     And I set the "Item_ID" to "0"
     And I press the "Ship-Item" button
-    Then I should see the message "404 Not Found: Item with id '0' was not found inside order."                               
+    Then I should see the message "Item with id '0' was not found inside order."

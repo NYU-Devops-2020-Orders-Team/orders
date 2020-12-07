@@ -110,6 +110,17 @@ def step_impl(context, customer_id):
     expect(found).to_be(True)
 
 
+@then('I should see "{text}" in the results')
+def step_impl(context, text):
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'results'),
+            text
+        )
+    )
+    expect(found).to_be(True)
+
+
 @then('I should not see order for customer_id "{customer_id}" in the results')
 def step_impl(context, customer_id):
     element = context.driver.find_element_by_id('results')
