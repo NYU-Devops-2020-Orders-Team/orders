@@ -135,7 +135,7 @@ def internal_server_error(error):
 ######################################################################
 @api.route('/orders', strict_slashes=False)
 class OrderCollection(Resource):
-    """ Handles all interactions with collections of Wishlists """
+    """ Handles all interactions with collections of Orders """
 
     # ------------------------------------------------------------------
     # ADD A NEW ORDER
