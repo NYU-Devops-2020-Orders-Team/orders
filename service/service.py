@@ -136,7 +136,7 @@ def internal_server_error(error):
 ######################################################################
 @api.route('/orders', strict_slashes=False)
 class OrderCollection(Resource):
-    """ Handles all interactions with collections of Wishlists """
+    """ Handles all interactions with collections of Orders """
 
     # ------------------------------------------------------------------
     # ADD A NEW ORDER
@@ -209,7 +209,7 @@ class OrderResource(Resource):
         app.logger.info("Request for order with id: %s", order_id)
         order = Order.find(order_id)
         if not order:
-            api.abort(status.HTTP_404_NOT_FOUND, "Orderr with id '{}' was not found.".format(order_id))
+            api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
         return order.serialize(), status.HTTP_200_OK
 
 
