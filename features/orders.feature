@@ -301,25 +301,17 @@ Feature: The orders service back-end
     And I set the "item0_quantity" to "5"
     And I set the "item0_price" to "10.99"
     And I select "Delivered" in the "item0_status" dropdown
-    And I press the "add-row" button
-    And I set the "item1_product_id" to "123"
-    And I set the "item1_quantity" to "1"
-    And I set the "item1_price" to "18"
-    And I select "Delivered" in the "item1_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
     When I copy the "id" field
     And I paste the "id" field
     And I press the "Deliver" button
-    Then I should see "145" in the "customer_id" field
-    And I should see "21" in the "item0_product_id" field
-    And I should see "5" in the "item0_quantity" field
-    And I should see "10.99" in the "item0_price" field
-    And I should see "Delivered" in the "item0_status" dropdown
-    And I should see "123" in the "item1_product_id" field
-    And I should see "1" in the "item1_quantity" field
-    And I should see "18" in the "item1_price" field
-    And I should see "Delivered" in the "item1_status" dropdown
+    Then I should see the message "Success"
+    When I press the "Reset-Form" button
+    And I set the "customer_id" to "145"
+    And I press the "find-by-customer-id" button
+    Then I should see the message "Success"
+    And I should see "DELIVERED" in the results
 
 
   Scenario: Ship an Order with placed items
