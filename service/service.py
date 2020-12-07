@@ -319,50 +319,65 @@ def delete_orders(order_id):
 
 
 ######################################################################
-# CANCEL AN ORDER
+# PATH: /orders/{order_id}/cancel
 ######################################################################
-@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
-def cancel_orders(order_id):
-    """ Cancel all the items of the Order that have not being shipped yet """
-    app.logger.info("Request to cancel order with id: %s", order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
+@api.route('/orders/<int:order_id>/cancel')
+@api.param('order_id', 'The Order identifier')
+class CancelOrderResource(Resource):
+    """ Cancel actions on an Order """
+    @api.doc('cancel_orders')
+    @api.response(404, 'Order not found')
+    @api.response(400, 'The Order is not valid for cancel')
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """ Cancel all the items of the Order that have not being shipped yet """
+        app.logger.info("Request to cancel order with id: %s", order_id)
+        order = Order.find(order_id)
+        if not order:
+             api.abort(status.HTTP_404_NOT_FOUND, "Order with id '{}' was not found.".format(order_id))
 
-    shipped_or_delivered_orders = 0
-    for order_item in order.order_items:
-        if order_item.status in ["DELIVERED", "SHIPPED"]:
-            shipped_or_delivered_orders += 1
-        elif order_item.status != "CANCELLED":
-            order_item.status = "CANCELLED"
-    if shipped_or_delivered_orders == len(order.order_items):
-        raise DataValidationError("All the items have been shipped/delivered. Nothing to cancel")
-    order.update()
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+        shipped_or_delivered_orders = 0
+        try: 
+            for order_item in order.order_items:
+                if order_item.status in ["DELIVERED", "SHIPPED"]:
+                    shipped_or_delivered_orders += 1
+                elif order_item.status != "CANCELLED":
+                    order_item.status = "CANCELLED"
+                if shipped_or_delivered_orders == len(order.order_items):
+                    raise DataValidationError("All the items have been shipped/delivered. Nothing to cancel")
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
+        order.update()
+        return order.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
-# CANCEL AN ITEM IN AN ORDER
+# PATH: /orders/{order_id}/items/{item_id}/cancel
 ######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>/cancel", methods=["PUT"])
-def cancel_item(order_id, item_id):
-    """ Cancel a single item in the Order that have not being shipped yet """
-    app.logger.info("Request to cancel item with id: %s in order with id: %s", item_id, order_id)
-    order = Order.find(order_id)
-    if not order:
-        raise NotFound("Order with id '{}' was not found.".format(order_id))
-    try:
-        order_item = find_order_item(order.order_items, item_id)
-        if not order_item:
-            raise NotFound("Item with id '{}' was not found inside order.".format(item_id))
-        if order_item.status in ["DELIVERED", "SHIPPED"]:
-            raise DataValidationError("Item has already been shipped/delivered")
-        if order_item.status != "CANCELLED":
-            order_item.status = "CANCELLED"
-            order.update()
-    except DataValidationError as dataValidationError:
-        api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
-    return make_response(jsonify(order.serialize()), status.HTTP_200_OK)
+@api.route('/orders/<int:order_id>/items/<int:item_id>/cancel')
+@api.param('order_id', 'The Order identifier')
+@api.param('item_id', 'The Order Item identifier')
+class CancelItemResource(Resource):
+    """ Cancel actions on an Order Item """
+    @api.doc('cancel_items')
+    @api.response(404, 'Order Item not found')
+    @api.response(400, 'The Order Item is not valid for cancel')
+    @api.marshal_with(order_model)
+    def put(self, order_id, item_id):
+        """ Cancel a single item in the Order that have not being shipped yet """
+        app.logger.info("Request to cancel item with id: %s in order with id: %s", item_id, order_id)
+        try:
+            order, order_item = get_order_and_order_item(order_id, item_id)
+            if order_item.status in ["DELIVERED", "SHIPPED"]:
+                raise DataValidationError("Item has already been shipped/delivered")
+            if order_item.status != "CANCELLED":
+                order_item.status = "CANCELLED"
+                order.update()
+            return order.serialize(), status.HTTP_200_OK
+        except NotFound as notFound:
+            api.abort(status.HTTP_404_NOT_FOUND, notFound)
+        except DataValidationError as dataValidationError:
+            api.abort(status.HTTP_400_BAD_REQUEST, dataValidationError)
 
 
 ######################################################################
