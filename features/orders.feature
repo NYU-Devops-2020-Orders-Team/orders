@@ -440,7 +440,7 @@ Feature: The orders service back-end
     Then I should see the message "Success"
     And I should see "Shipped" in the "Item0_Status" dropdown
     When I copy the "Item0_Item_ID" field
-    and I paste the "Item_ID" field
+    And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
     Then I should see the message "Success"
     And I should see "Delivered" in the "Item0_Status" dropdown
@@ -452,7 +452,7 @@ Feature: The orders service back-end
     Then I should see the message "Success"
     And I should see "Placed" in the "Item0_Status" dropdown
     When I copy the "Item0_Item_ID" field
-    and I paste the "Item_ID" field
+    And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
     Then I should see the message "Item has not been shipped yet."
   
@@ -463,7 +463,7 @@ Feature: The orders service back-end
     Then I should see the message "Success"
     And I should see "Cancelled" in the "Item0_Status" dropdown
     When I copy the "Item0_Item_ID" field
-    and I paste the "Item_ID" field
+    And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
     Then I should see the message "Item has already been cancelled."
 
@@ -474,7 +474,7 @@ Feature: The orders service back-end
     Then I should see the message "Success"
     And I should see "Delivered" in the "Item0_Status" dropdown
     When I copy the "Item0_Item_ID" field
-    and I paste the "Item_ID" field
+    And I paste the "Item_ID" field
     And I press the "Deliver-Item" button
     Then I should see the message "Item has already been delivered."
 
