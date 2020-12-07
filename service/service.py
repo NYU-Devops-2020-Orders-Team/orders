@@ -281,25 +281,24 @@ def get_customer_id_from_request(json):
         raise DataValidationError("Invalid order: missing " + error.args[0])
 
 
-######################################################################
-# PATH: /orders/{order_id}/delete
-######################################################################
-@api.route('/orders/<int:order_id>/delete')
-@api.param('order_id', 'The Order identifier')
-class DeleteOrderResource(Resource):
-    """ Delete actions on an Order """
-    @api.doc('delete_orders')
-    @api.response(404, 'Order not found')
-    @api.marshal_with(order_model)
-    def delete(self, order_id):
-        """ delete all the items of the Order  """
-        app.logger.info("Request to delete order with id: %s", order_id)
-        order = Order.find(order_id)
-        if not order:
-            raise NotFound("Order with id '{}' was not found.".format(order_id))
+# ------------------------------------------------------------------
+# DELETE AN ORDER
+# ------------------------------------------------------------------
+@api.doc('delete_orders')
+@api.response(404, 'Order not found')
+@api.marshal_with(order_model)
+def delete(self, order_id):
+    """
+    Delete an Order
+    This endpoint will delete an Order based the id specified in the path
+    """
+    app.logger.info("Request to delete order with id: %s", order_id)
+    order = Order.find(order_id)
+    if order:
         order.delete()
-        app.logger.info("Order with ID [%s] delete complete.", order_id)        
-        return "", status.HTTP_204_NO_CONTENT
+
+    app.logger.info("Order with ID [%s] delete complete.", order_id)
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 # CANCEL AN ORDER
