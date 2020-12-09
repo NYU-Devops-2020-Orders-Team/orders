@@ -237,6 +237,25 @@ class OrderResource(Resource):
         order.update()
         return order.serialize(), status.HTTP_200_OK
 
+    # ------------------------------------------------------------------
+    # DELETE AN ORDER
+    # ------------------------------------------------------------------
+    @api.doc('delete_orders')
+    @api.response(404, 'Order not found')
+    @api.marshal_with(order_model)
+    def delete(self, order_id):
+        """
+        Delete an Order
+        This endpoint will delete an Order based the id specified in the path
+        """
+        app.logger.info("Request to delete order with id: %s", order_id)
+        order = Order.find(order_id)
+        if order:
+            order.delete()
+
+        app.logger.info("Order with ID [%s] delete complete.", order_id)
+        return "", status.HTTP_204_NO_CONTENT
+
 
 ######################################################################
 #  PATH: /orders/{order_id}/items/{item_id}
@@ -298,24 +317,6 @@ def get_customer_id_from_request(json):
         return new_customer_id
     except KeyError as error:
         raise DataValidationError("Invalid order: missing " + error.args[0])
-
-
-######################################################################
-# DELETE AN ORDER
-######################################################################
-@app.route("/orders/<int:order_id>", methods=["DELETE"])
-def delete_orders(order_id):
-    """
-    Delete an Order
-    This endpoint will delete an Order based the id specified in the path
-    """
-    app.logger.info("Request to delete order with id: %s", order_id)
-    order = Order.find(order_id)
-    if order:
-        order.delete()
-
-    app.logger.info("Order with ID [%s] delete complete.", order_id)
-    return make_response("", status.HTTP_204_NO_CONTENT)
 
 
 ######################################################################
